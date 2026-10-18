@@ -1,4 +1,7 @@
+import { cookies } from "next/headers";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { isValidOtpSessionToken } from "@/lib/auth/otpStore";
+import { getAdminRecipients } from "@/lib/email/mailer";
 
 export interface AdminAuthResult {
   isAdmin: boolean;
@@ -9,7 +12,8 @@ export interface AdminAuthResult {
 
 /**
  * Server-side authorization check for administrative operations.
- * Validates that the active session has an authenticated user with 'admin' role.
+ * Validates that the active session has an authenticated user with 'admin' role,
+ * or possesses a verified admin OTP session token.
  */
 export async function verifyAdminSession(): Promise<AdminAuthResult> {
   // Allow explicit mock override in test suites
@@ -22,6 +26,21 @@ export async function verifyAdminSession(): Promise<AdminAuthResult> {
     };
   }
 
+  // Check 1: Verified OTP Session Cookie
+  try {
+    const cookieStore = await cookies();
+    const otpSessionToken = cookieStore.get("admin_otp_session")?.value;
+    if (isValidOtpSessionToken(otpSessionToken)) {
+      return {
+        isAdmin: true,
+        userId: "admin-otp-verified",
+        email: "piyakshi90@gmail.com",
+      };
+    }
+  } catch {
+    // Continue to Supabase auth check if cookies() is inaccessible
+  }
+
   // Check for test or local dev mock in non-production environments when Supabase is not configured
   if (process.env.NODE_ENV !== "production") {
     if (
@@ -32,7 +51,7 @@ export async function verifyAdminSession(): Promise<AdminAuthResult> {
       return {
         isAdmin: true,
         userId: "dev-admin-id",
-        email: "admin@leftovertileplanner.com",
+        email: "piyakshi90@gmail.com",
       };
     }
   }
@@ -54,17 +73,13 @@ export async function verifyAdminSession(): Promise<AdminAuthResult> {
     }
 
     // Strict Role verification: check app_metadata ONLY for 'admin'
-    // CRITICAL SECURITY FIX: user_metadata is user-writable via client SDK and MUST NOT be trusted.
     const role = user.app_metadata && user.app_metadata.role;
     const isExplicitAdmin = role === "admin";
 
-    // Strict admin email verification against explicit server environment variable
-    const configuredAdminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
-    const isAdminEmail = Boolean(
-      configuredAdminEmail &&
-        user.email &&
-        user.email.trim().toLowerCase() === configuredAdminEmail
-    );
+    // Strict admin email verification against all configured admin notification channels
+    const allowedAdminEmails = getAdminRecipients();
+    const userEmail = (user.email || "").trim().toLowerCase();
+    const isAdminEmail = allowedAdminEmails.includes(userEmail);
 
     if (!isExplicitAdmin && !isAdminEmail) {
       return {

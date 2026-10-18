@@ -53,7 +53,11 @@ const serverEnvSchema = z.object({
     .string()
     .email()
     .optional()
-    .default("admin@4dev.in"),
+    .default("piyakshi90@gmail.com"),
+  ADMIN_NOTIFICATION_EMAILS: z
+    .string()
+    .optional()
+    .default("piyakshi90@gmail.com,one2ai@aol.com"),
 });
 
 /**
@@ -106,6 +110,7 @@ function parseServerEnv(): Partial<z.infer<typeof serverEnvSchema>> {
     RESEND_API_KEY: process.env.RESEND_API_KEY,
     RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL,
     ADMIN_EMAIL: process.env.ADMIN_EMAIL,
+    ADMIN_NOTIFICATION_EMAILS: process.env.ADMIN_NOTIFICATION_EMAILS,
   });
 
   if (!result.success) {

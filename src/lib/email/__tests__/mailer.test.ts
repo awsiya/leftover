@@ -122,5 +122,17 @@ describe("Resend Mailer Service", () => {
       expect(result.success).toBe(true);
       expect(result.messageId).toBe("mock-email-id-12345");
     });
+
+    it("dispatches 6-digit login verification OTP to admin recipients", async () => {
+      const { sendAdminLoginOtpEmail } = await import("../mailer");
+      const result = await sendAdminLoginOtpEmail({
+        otpCode: "654321",
+        requestedEmail: "piyakshi90@gmail.com",
+        recipients: ["piyakshi90@gmail.com", "one2ai@aol.com"],
+      });
+
+      expect(result.success).toBe(true);
+      expect(result.messageId).toBe("mock-email-id-12345");
+    });
   });
 });

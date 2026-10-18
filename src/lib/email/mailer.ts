@@ -393,7 +393,21 @@ export async function sendOrderConfirmationEmail(
 }
 
 /**
- * Sends admin notification email about a newly fulfilled plan order.
+ * Helper to obtain the list of all configured admin recipient emails.
+ * Defaults to piyakshi90@gmail.com and one2ai@aol.com.
+ */
+export function getAdminRecipients(): string[] {
+  const envList = process.env.ADMIN_NOTIFICATION_EMAILS || env.ADMIN_NOTIFICATION_EMAILS;
+  if (envList) {
+    const list = envList.split(",").map((e) => e.trim().toLowerCase()).filter(Boolean);
+    if (list.length > 0) return Array.from(new Set(list));
+  }
+  const primary = (process.env.ADMIN_EMAIL || env.ADMIN_EMAIL || "piyakshi90@gmail.com").toLowerCase();
+  return Array.from(new Set([primary, "one2ai@aol.com"]));
+}
+
+/**
+ * Sends admin notification email about a newly fulfilled plan order to ALL admin recipients.
  */
 export async function sendAdminOrderNotification(
   params: AdminNotificationParams
@@ -401,32 +415,94 @@ export async function sendAdminOrderNotification(
   const resend = getResendClient();
   if (!resend) return { success: false, error: "RESEND_API_KEY_NOT_CONFIGURED" };
 
-  const adminEmail = process.env.ADMIN_EMAIL || env.ADMIN_EMAIL || "admin@4dev.in";
+  const recipients = getAdminRecipients();
   const fromEmail = process.env.RESEND_FROM_EMAIL || env.RESEND_FROM_EMAIL || "Leftover Tile Planner <leftover@4dev.in>";
   const formattedAmount = (params.amountCents / 100).toFixed(2);
 
   try {
     const response = await resend.emails.send({
       from: fromEmail,
-      to: adminEmail,
+      to: recipients,
       subject: `[New Sale $${formattedAmount}] ${params.projectTitle}`,
       html: `
-        <div style="font-family: sans-serif; padding: 20px; border: 1px solid #e5e5e5; border-radius: 8px;">
+        <div style="font-family: sans-serif; padding: 24px; border: 1px solid #e7e2d7; border-radius: 8px;">
           <h3 style="color: #166534; margin-top: 0;">New Leftover Tile Plan Purchase Confirmed</h3>
           <p><strong>Project:</strong> ${escapeHtml(params.projectTitle)}</p>
           <p><strong>Customer Email:</strong> ${escapeHtml(params.customerEmail)}</p>
-          <p><strong>Amount:</strong> $${formattedAmount} USD</p>
+          <p><strong>Amount Paid:</strong> $${formattedAmount} USD</p>
           <p><strong>Order ID:</strong> ${escapeHtml(params.orderId)}</p>
           <p><strong>Stripe Session:</strong> ${escapeHtml(params.stripeSessionId)}</p>
+          <p style="color: #7a7369; font-size: 11px; margin-top: 16px;">
+            Alert dispatched to admin recipients: ${recipients.join(", ")}
+          </p>
         </div>
       `,
-      text: `New Plan Purchase Confirmed\nProject: ${params.projectTitle}\nCustomer: ${params.customerEmail}\nAmount: $${formattedAmount} USD\nOrder: ${params.orderId}`,
+      text: `New Plan Purchase Confirmed\nProject: ${params.projectTitle}\nCustomer: ${params.customerEmail}\nAmount: $${formattedAmount} USD\nOrder: ${params.orderId}\nRecipients: ${recipients.join(", ")}`,
     });
 
     return { success: !response.error, messageId: response.data?.id };
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Admin notification failed";
     console.warn(`[Resend Admin Notification Warning]`, message);
+    return { success: false, error: message };
+  }
+}
+
+/**
+ * Dispatches a 6-digit login verification OTP code to ALL configured admin emails.
+ */
+export async function sendAdminLoginOtpEmail(params: {
+  otpCode: string;
+  requestedEmail: string;
+  recipients?: string[];
+}): Promise<{ success: boolean; messageId?: string; error?: string }> {
+  const resend = getResendClient();
+  if (!resend) return { success: false, error: "RESEND_API_KEY_NOT_CONFIGURED" };
+
+  const recipients = params.recipients && params.recipients.length > 0 ? params.recipients : getAdminRecipients();
+  const fromEmail = process.env.RESEND_FROM_EMAIL || env.RESEND_FROM_EMAIL || "Leftover Tile Planner <leftover@4dev.in>";
+
+  try {
+    const response = await resend.emails.send({
+      from: fromEmail,
+      to: recipients,
+      subject: `[Your Admin Login Code] ${params.otpCode} — Leftover Tile Planner`,
+      html: `
+        <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 540px; margin: 0 auto; padding: 28px; border: 1px solid #e7e2d7; border-radius: 8px; background-color: #ffffff;">
+          <div style="border-bottom: 2px solid #b85d38; padding-bottom: 12px; margin-bottom: 20px;">
+            <h2 style="color: #2b2927; margin: 0; font-size: 18px;">Leftover Tile Project Planner</h2>
+            <p style="color: #b85d38; font-size: 12px; text-transform: uppercase; margin: 4px 0 0 0; font-weight: 600;">Admin Portal Security Verification</p>
+          </div>
+
+          <p style="font-size: 14px; color: #2b2927;">An administrative sign-in was requested for <strong>${escapeHtml(params.requestedEmail)}</strong>.</p>
+          <p style="font-size: 14px; color: #555048;">Use the one-time 6-digit security code below to complete authentication:</p>
+
+          <div style="background-color: #f7f6f2; border: 1px dashed #c98860; border-radius: 8px; padding: 18px; text-align: center; margin: 24px 0;">
+            <span style="font-family: monospace, Courier; font-size: 32px; font-weight: bold; letter-spacing: 0.25em; color: #b85d38;">
+              ${params.otpCode}
+            </span>
+          </div>
+
+          <p style="font-size: 12px; color: #7a7369; line-height: 1.5;">
+            &bull; This code is valid for <strong>10 minutes</strong>.<br />
+            &bull; This alert has been broadcast to both registered administrative channels:<br />
+            &nbsp;&nbsp;<strong>${recipients.join(" &bull; ")}</strong><br />
+            &bull; If you did not request this login code, please review your account immediately.
+          </p>
+
+          <hr style="border: none; border-top: 1px solid #ede8de; margin: 20px 0;" />
+          <p style="font-size: 11px; color: #9c9589; text-align: center; margin: 0;">
+            Leftover Tile Project Planner &bull; Sent from leftover@4dev.in
+          </p>
+        </div>
+      `,
+      text: `Leftover Tile Project Planner - Admin Login Code\n\nYour 6-digit verification code is: ${params.otpCode}\n\nValid for 10 minutes.\nBroadcast to: ${recipients.join(", ")}\nIf you did not request this code, ignore this email.`,
+    });
+
+    return { success: !response.error, messageId: response.data?.id };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : "Failed to dispatch OTP email";
+    console.warn(`[Resend Admin OTP Warning]`, message);
     return { success: false, error: message };
   }
 }
