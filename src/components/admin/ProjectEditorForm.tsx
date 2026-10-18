@@ -16,9 +16,13 @@ import {
   BookOpen,
   Globe,
   FileCheck2,
+  FileText,
+  Download,
+  ExternalLink,
 } from "lucide-react";
 import { SeededProject } from "@/lib/data/seededProjects";
 import { updateProjectVerification } from "@/lib/actions/adminProjects";
+import { generateAdminPlanDownloadUrl } from "@/lib/actions/planDownloadActions";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
@@ -32,8 +36,14 @@ export function ProjectEditorForm({ initialProject }: ProjectEditorFormProps) {
   const router = useRouter();
   const [project, setProject] = useState<SeededProject>(initialProject);
   const [activeTab, setActiveTab] = useState<
-    "general" | "requirements" | "materials-tools" | "instructions" | "translations" | "verification"
+    "general" | "requirements" | "materials-tools" | "instructions" | "translations" | "verification" | "pdf-plan"
   >("verification");
+
+  // PDF Preview State
+  const [pdfLoading, setPdfLoading] = useState(false);
+  const [pdfDownloadUrl, setPdfDownloadUrl] = useState<string | null>(null);
+  const [pdfChecksum, setPdfChecksum] = useState<string | null>(null);
+  const [pdfError, setPdfError] = useState<string | null>(null);
 
   // Verification evidence state
   const [targetStatus, setTargetStatus] = useState<ProjectVerificationStatus>(project.verificationStatus);
@@ -95,6 +105,24 @@ export function ProjectEditorForm({ initialProject }: ProjectEditorFormProps) {
           : `Project status updated to '${targetStatus}'.`
       );
       router.refresh();
+    }
+  };
+
+  const handleGeneratePdf = async () => {
+    setPdfLoading(true);
+    setPdfError(null);
+    try {
+      const res = await generateAdminPlanDownloadUrl(project.id, "v1.0.0");
+      if (res.success && res.downloadUrl) {
+        setPdfDownloadUrl(res.downloadUrl);
+        setPdfChecksum(res.checksum || null);
+      } else {
+        setPdfError(res.error || "Failed to generate plan PDF preview.");
+      }
+    } catch (err: unknown) {
+      setPdfError(err instanceof Error ? err.message : "Error generating PDF");
+    } finally {
+      setPdfLoading(false);
     }
   };
 
@@ -218,6 +246,19 @@ export function ProjectEditorForm({ initialProject }: ProjectEditorFormProps) {
         >
           <Globe className="h-4 w-4" />
           <span>Translations (4 Locales)</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab("pdf-plan")}
+          className={`px-4 py-2.5 border-b-2 transition-colors flex items-center gap-1.5 ${
+            activeTab === "pdf-plan"
+              ? "border-terracotta-600 text-terracotta-700 font-bold"
+              : "border-transparent text-charcoal-600 hover:text-charcoal-900"
+          }`}
+        >
+          <FileText className="h-4 w-4" />
+          <span>Printable PDF Plan (v1.0.0)</span>
         </button>
       </div>
 
@@ -574,6 +615,110 @@ export function ProjectEditorForm({ initialProject }: ProjectEditorFormProps) {
             );
           })}
         </div>
+      )}
+
+      {/* TAB 7: PRINTABLE PDF PLAN PIPELINE */}
+      {activeTab === "pdf-plan" && (
+        <Card className="bg-white border-ceramic-300 p-6 space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-ceramic-200">
+            <div>
+              <CardTitle className="text-base font-serif">Architectural PDF Plan Pipeline (v1.0.0)</CardTitle>
+              <CardDescription className="text-xs text-charcoal-600 mt-1">
+                Publication-quality vector PDF containing cutting blueprints, verified measurements, materials checklist, and TCNA safety notes.
+              </CardDescription>
+            </div>
+            <Button
+              type="button"
+              variant="primary"
+              size="sm"
+              onClick={handleGeneratePdf}
+              disabled={pdfLoading}
+              className="shrink-0 flex items-center gap-2"
+            >
+              {pdfLoading ? (
+                <span>Generating Vector PDF...</span>
+              ) : (
+                <>
+                  <Download className="h-4 w-4" />
+                  <span>Generate & Preview Plan PDF</span>
+                </>
+              )}
+            </Button>
+          </div>
+
+          {pdfError && (
+            <div className="rounded border border-red-300 bg-red-50 p-3 text-xs text-red-800 flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-red-600 shrink-0" />
+              <span>{pdfError}</span>
+            </div>
+          )}
+
+          {pdfDownloadUrl && (
+            <div className="rounded border border-emerald-300 bg-emerald-50 p-4 text-xs text-emerald-950 space-y-2">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <span className="font-bold flex items-center gap-1.5 text-emerald-800">
+                  <CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+                  Printable Plan PDF Generated Successfully
+                </span>
+                <a
+                  href={pdfDownloadUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-emerald-700 hover:bg-emerald-800 text-white font-semibold transition-colors w-fit"
+                >
+                  <ExternalLink className="h-3.5 w-3.5" />
+                  <span>Download / Open PDF</span>
+                </a>
+              </div>
+              <p className="text-[11px] text-emerald-900 font-mono break-all">
+                SHA-256 Checksum: {pdfChecksum}
+              </p>
+              <p className="text-[11px] text-emerald-800">
+                Protected Token Active (Valid for 15 minutes under Admin Audit Preview).
+              </p>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
+            <div className="p-3 rounded bg-ceramic-50 border border-ceramic-200 space-y-1">
+              <span className="text-charcoal-500 font-semibold block uppercase text-[10px]">Document Format</span>
+              <strong className="text-charcoal-900 block text-sm">3 Pages (US Letter / A4)</strong>
+              <span className="text-charcoal-600">Vector-sharp architectural schematics</span>
+            </div>
+
+            <div className="p-3 rounded bg-ceramic-50 border border-ceramic-200 space-y-1">
+              <span className="text-charcoal-500 font-semibold block uppercase text-[10px]">Version Freeze</span>
+              <strong className="text-charcoal-900 block text-sm">Release v1.0.0</strong>
+              <span className="text-charcoal-600">Deterministic snapshot matches version sold</span>
+            </div>
+
+            <div className="p-3 rounded bg-ceramic-50 border border-ceramic-200 space-y-1">
+              <span className="text-charcoal-500 font-semibold block uppercase text-[10px]">Commerce Protection</span>
+              <strong className={`block text-sm ${project.verificationStatus === "verified" ? "text-emerald-700" : "text-amber-700"}`}>
+                {project.verificationStatus === "verified" ? "Unlocked (Sellable)" : "Locked (Unverified)"}
+              </strong>
+              <span className="text-charcoal-600">
+                {project.verificationStatus === "verified"
+                  ? "Available for customer checkout"
+                  : "Protected: Requires physical verification"}
+              </span>
+            </div>
+          </div>
+
+          <div className="space-y-2 text-xs">
+            <h4 className="font-bold text-charcoal-900">Included Blueprint Sections</h4>
+            <ul className="list-disc list-inside space-y-1 text-charcoal-700">
+              <li>FIG 1.0 — Schematic Cutting &amp; Layout Blueprint (Top-down plan view with kerf callout)</li>
+              <li>FIG 2.0 — Structural Bonding &amp; Substrate Cross-Section (Substrate, mortar bed, tile, grout)</li>
+              <li>Verified measurements table (Target footprint, min area, piece count yield, thickness range)</li>
+              <li>Full Bill of Materials checklist with checkboxes and exact quantities</li>
+              <li>Workshop tools checklist (standard and optional equipment)</li>
+              <li>Numbered fabrication steps with inline safety tips</li>
+              <li>Mandatory OSHA / TCNA crystalline silica and cut-safety protocol</li>
+              <li>Anti-tamper cryptographic SHA-256 seal and customer license watermark</li>
+            </ul>
+          </div>
+        </Card>
       )}
     </div>
   );
