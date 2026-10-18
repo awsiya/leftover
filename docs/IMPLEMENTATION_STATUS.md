@@ -5,7 +5,7 @@
 | Phase | Description | Status | Completion Target |
 | :--- | :--- | :---: | :--- |
 | **Phase 1** | **Architecture, Foundation & Design System** | **COMPLETED** | Initial foundation milestone |
-| **Phase 2** | Deterministic Matching Engine & Guided Calculator | Queued | Awaiting Phase 1 sign-off |
+| **Phase 2** | **Deterministic Matching Engine & Schema Design** | **COMPLETED** | Core algorithmic engine milestone |
 | **Phase 3** | Project Catalogue (20 Plans) & Stripe Payments ($4.99) | Queued | Following Phase 2 |
 | **Phase 4** | Printable PDF Plan Engine & Secure Storage Pipeline | Queued | Following Phase 3 |
 | **Phase 5** | Admin Panel & Content Translation Management | Queued | Following Phase 4 |
@@ -14,50 +14,50 @@
 
 ---
 
-## 2. Phase 1 Deliverables Checklist
+## 2. Phase 2 Deliverables Checklist
 
-### Core Architecture & Documentation
-- [x] Workspace inspected and verified clean with Node.js v24+, npm 11+, and Git initialized on `main`.
-- [x] Comprehensive architectural roadmap created (`docs/PROJECT_PLAN.md`).
-- [x] System architecture & component layer design created (`docs/ARCHITECTURE.md`).
-- [x] Supabase PostgreSQL database schema with RLS policies created (`docs/DATABASE_DESIGN.md`).
-- [x] Security, anti-fraud, and DIY safety checklist created (`docs/SECURITY_CHECKLIST.md`).
-- [x] Implementation status & testing tracker created (`docs/IMPLEMENTATION_STATUS.md`).
-- [x] Production setup and environment README created (`README.md`).
+### Supabase Database & Migrations
+- [x] Schema migration created (`supabase/migrations/20261018000001_phase2_schema_and_requirements.sql`):
+  - `categories` (slug, timestamps)
+  - `projects` (slug, category, difficulty, verification status, price_cents, active_plan_version_id)
+  - `project_requirements` (min/target area, piece counts, dimensional constraints, allowed conditions, allowed materials, straight/curved cuts, outdoor/wet area ratings, shard allowance, grout width, waste factors)
+  - `project_plan_versions` (version number, label, storage path, file size, SHA256 checksum, page count, active status)
+  - `project_translations` (localized titles, subtitles, dimensions, overview, safety notes, instruction summaries, SEO meta)
+  - `tools` & `project_tools`
+  - `materials` & `project_materials`
+  - `articles` & `article_translations`
+  - Row Level Security (RLS) policies on all tables restricting unverified plans and unauthenticated writes
+- [x] TypeScript database definitions updated (`src/lib/types/database.ts`).
+- [x] Database documentation updated (`docs/DATABASE_DESIGN.md`).
 
-### Application Foundation & Tooling
-- [x] Next.js App Router application configured with TypeScript (`tsconfig.json`), ESLint, and PostCSS.
-- [x] Tailwind CSS configured with custom warm ceramic, terracotta, charcoal, and sage design tokens.
-- [x] Typed environment variable validation (`src/lib/env.ts`) using Zod with zero-leakage error formatters.
-- [x] Safe environment template created (`.env.example`).
-- [x] Supabase client utilities implemented:
-  - `src/lib/supabase/client.ts` — Browser client using anonymous credentials with RLS.
-  - `src/lib/supabase/server.ts` — Server client utilizing asynchronous Next.js 15 cookie store.
-  - `src/lib/supabase/admin.ts` — Elevated client holding `SUPABASE_SERVICE_ROLE_KEY` with runtime browser guard.
+### Deterministic Matching Engine
+- [x] Metric and imperial precision unit converter (`src/lib/matching/converter.ts`):
+  - Exact bidirectional conversions (`inches`, `cm`, `mm`, `sq ft`, `sq cm`, `sq mm`).
+- [x] Input validation & normalization (`src/lib/matching/validator.ts`):
+  - Zod schemas validating positive dimensions, whole integer quantities, allowed units, conditions, and materials.
+  - Automatic kerf loss and mosaic waste allowances: 10% for intact straight cuts, 15% for mixed cuts, 25% for broken mosaic shards.
+- [x] Feasibility and rule evaluation engine (`src/lib/matching/rules.ts`):
+  - Area sufficiency check ($A_{\text{effective}} \ge A_{\text{min}}$).
+  - Piece count sufficiency and dimensional cutting feasibility.
+  - Condition compatibility check (intact vs. broken mosaic vs. mixed).
+  - Material and environmental compatibility check (outdoor freeze-thaw porcelain enforcement, ceramic exclusion).
+  - Tier assignment: Tier 1 (Exact Fit), Tier 2 (Trimming Required), Tier 3 (Mosaic Compatible), Tier 0 (Infeasible).
+  - Explainable rationale generation, cut counts, passing checks, failing checks, and safety warnings.
+- [x] Engine coordinator (`src/lib/matching/engine.ts`):
+  - Multi-tier deterministic sorting: Feasible first, Match Tier (1 > 2 > 3 > 0), Score descending, alphabetical tie-breaker.
+- [x] Project requirements catalog (`src/lib/matching/catalog.ts`).
+- [x] Interactive UI Integration (`src/components/calculator/TileMatchingWizard.tsx`):
+  - Real-time calculator wizard embedded into `/calculator` route with interactive tabs (Feasible vs. Infeasible), score displays, and plan previews.
 
-### Shared Design System & Layout Components
-- [x] Global typography, natural ceramic colors, accessible contrast, responsive grid in `src/app/globals.css`.
-- [x] Global Navigation Header (`src/components/layout/Header.tsx`) with brand mark, desktop links, mobile drawer, and CTA.
-- [x] Global Editorial Footer (`src/components/layout/Footer.tsx`) with site navigation, multilingual switcher placeholder, and safety notice.
-- [x] Reusable UI components: `Button`, `Card`, `Badge`, `Input`, `Accordion`.
-
-### Initial Landing Page & Route Placeholders
-- [x] Editorial Landing Page (`/`):
-  - Hero Section (`src/components/home/HeroSection.tsx`) with conversion CTA and trust signals.
-  - Interactive Quick Calculator Teaser (`src/components/home/QuickCalculatorTeaser.tsx`) with real-time area calculations.
-  - Curated Sample Project Cards (`src/components/home/SampleProjectsSection.tsx`) with difficulty, time estimate, and required tile count.
-  - "How It Works" 3-step transparent workflow (`src/components/home/HowItWorksSection.tsx`).
-  - Editorial Upcycling Principles & Material Science (`src/components/home/EditorialFeaturesSection.tsx`).
-  - Accessible FAQ Accordion (`src/components/home/FaqSection.tsx`) addressing DIY cutting, crystalline silica, and tile frost safety.
-  - Schema.org `WebApplication` JSON-LD structured data.
-- [x] Route Placeholders:
-  - `/calculator` (`src/app/calculator/page.tsx`) — Tile inventory calculator entry.
-  - `/projects` (`src/app/projects/page.tsx`) — Curated project catalogue preview.
-  - `/projects/[slug]` (`src/app/projects/[slug]/page.tsx`) — Detailed project preview with BOM and tools.
-  - `/articles` (`src/app/articles/page.tsx`) — Editorial DIY guides hub preview.
-  - `/articles/[slug]` (`src/app/articles/[slug]/page.tsx`) — Editorial guide article template.
-  - `/admin/login` (`src/app/admin/login/page.tsx`) — Administrative authentication portal preview.
-  - `/api/health` (`src/app/api/health/route.ts`) — Server runtime health check route.
+### Automated Unit Testing Suite
+- [x] Comprehensive Vitest unit test suite created (`src/lib/matching/__tests__/matching.test.ts`):
+  - Exact matches: 4"x4" tiles matching Coasters as Tier 1 Exact Fit with 0 cuts.
+  - Insufficient quantities: low piece counts or small areas correctly rejected.
+  - Incompatible dimensions: small tiles failing intact piece size requirements despite high area.
+  - Mixed units: verified metric (cm/mm) and imperial (in) yield identical matching results.
+  - Broken tiles: 25% mosaic fracture waste applied; matched to mosaic trivets and rejected from intact-only projects.
+  - Zero, negative & invalid inputs: validated non-positive dimensions, float quantities, and unsupported units rejected.
+  - Outdoor freeze-thaw safety: ceramic tiles rejected for outdoor stepping stones; porcelain accepted.
 
 ---
 
@@ -65,27 +65,24 @@
 
 | Date / Timestamp | Test / Check | Command Executed | Result | Details |
 | :--- | :--- | :--- | :---: | :--- |
-| 2026-10-18 | Workspace Inspection | `Get-ChildItem`, `git status` | Pass | Clean directory, Git initialized on `main`. |
-| 2026-10-18 | Toolchain Inspection | `node -v`, `npm -v`, `git --version` | Pass | Node v24.21.0, npm 11.19.0, Git 2.56. |
+| Phase 1 | Workspace & Toolchain | `Get-ChildItem`, `node -v` | Pass | Clean directory, Node v24.21.0, Git initialized. |
+| Phase 1 | App Foundation Checks | `npm run typecheck`, `npm run lint` | Pass | 0 errors, 0 warnings. |
+| Phase 1 | Initial Production Build | `npm run build` | Pass | All 9 routes compiled and prerendered. |
+| 2026-10-18 | Vitest Test Suite | `npm test` (`vitest run`) | Pass | 16/16 unit tests passed in 34ms across all edge cases. |
 | 2026-10-18 | TypeScript Typecheck | `npm run typecheck` | Pass | `tsc --noEmit` exited with code 0. Zero errors. |
 | 2026-10-18 | ESLint Code Check | `npm run lint` | Pass | `next lint` exited with code 0. Zero warnings, zero errors. |
-| 2026-10-18 | Next.js Production Build | `npm run build` | Pass | Prerendered all 9 static and dynamic routes successfully. |
-| 2026-10-18 | API Health Route Test | `Invoke-RestMethod http://localhost:3000/api/health` | Pass | HTTP 200 OK returned with JSON health status. |
-| 2026-10-18 | Route HTTP Verification | `Invoke-WebRequest` across 7 app routes | Pass | HTTP 200 OK for `/`, `/calculator`, `/projects`, `/projects/[slug]`, `/articles`, `/articles/[slug]`, `/admin/login`. |
-| 2026-10-18 | Missing Secret Guard Test | `requireServerSecret('STRIPE_SECRET_KEY')` | Pass | Throws clean error explaining missing key without leaking secrets. |
-| 2026-10-18 | Client Guard Test | `createAdminClient()` under `window !== undefined` | Pass | Throws security exception blocking client-side admin client creation. |
-| 2026-10-18 | Semantic HTML & Landmarks | DOM parser on rendered homepage | Pass | Confirmed presence of `<main>`, `<nav>`, `<footer>`, `<h1>`, JSON-LD schema, and 0 missing image `alt` attributes. |
+| 2026-10-18 | Production Build | `npm run build` | Pass | Successfully compiled and prerendered all static and dynamic pages. |
 
 ---
 
 ## 4. Unresolved Issues & Technical Debts
 
-- None. All Phase 1 deliverables and security criteria have been met with zero regressions.
+- None. All Phase 2 deliverables, database migrations, matching engine rules, and unit tests have passed.
 
 ---
 
-## 5. Next Steps for Phase 2 (Awaiting User Direction)
+## 5. Next Steps for Phase 3 (Awaiting User Direction)
 
-1. Implement the complete multi-step tile input wizard with automatic metric/imperial conversion and kerf loss calculations.
-2. Build the deterministic matching algorithm in `src/lib/matching/` mapping tile dimensions and condition to project suitability.
-3. Add unit test suite (Vitest/Jest) verifying matching mathematics against edge-case inventories (e.g. standard subway tiles, 12x12 floor tiles, mixed fractured shards).
+1. Implement the remaining curated project plans (expanding to the full 20 project catalog).
+2. Build the project preview pages with bill of materials, dimensions, and tool lists.
+3. Integrate Stripe Checkout for one-time $4.99 payments with server-side webhook signature verification and idempotent purchase storage.
