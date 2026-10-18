@@ -1950,3 +1950,5 @@ export const TWENTY_PROJECT_CONCEPTS: SeededProject[] = [
     },
   },
 ];
+
+export const SEEDED_PROJECTS = TWENTY_PROJECT_CONCEPTS;

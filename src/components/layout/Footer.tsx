@@ -1,8 +1,35 @@
+"use client";
+
 import React from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Grid, Globe, ShieldAlert, Sparkles } from "lucide-react";
+import { LanguageSwitcher } from "@/components/layout/LanguageSwitcher";
+import { AppLocale, DEFAULT_LOCALE, isValidLocale } from "@/lib/i18n/config";
+import { getNavTranslations } from "@/lib/i18n/navigation";
+import { buildLocalizedPath } from "@/lib/i18n/metadata";
 
-export function Footer() {
+interface FooterProps {
+  currentLocale?: AppLocale;
+}
+
+export function Footer({ currentLocale: propLocale }: FooterProps) {
+  const pathname = usePathname();
+
+  let activeLocale: AppLocale = propLocale || DEFAULT_LOCALE;
+  if (!propLocale && pathname) {
+    const firstSegment = pathname.split("/").filter(Boolean)[0];
+    if (firstSegment && isValidLocale(firstSegment)) {
+      activeLocale = firstSegment;
+    }
+  }
+
+  const nav = getNavTranslations(activeLocale);
+
+  const calculatorHref = buildLocalizedPath(activeLocale, "/calculator");
+  const projectsHref = buildLocalizedPath(activeLocale, "/projects");
+  const articlesHref = buildLocalizedPath(activeLocale, "/articles");
+
   return (
     <footer className="border-t border-ceramic-300 bg-ceramic-100 text-charcoal-800 transition-colors">
       <div className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8 lg:py-16">
@@ -18,9 +45,7 @@ export function Footer() {
               </span>
             </div>
             <p className="text-sm text-charcoal-600 leading-relaxed max-w-sm">
-              Helping remodelers, homeowners, and artisans rescue surplus ceramic, porcelain, and
-              stone tiles from waste. High-precision printable plans with exact cut templates and
-              foolproof formulas.
+              {nav.footerTagline}
             </p>
             <div className="flex items-center gap-2 text-xs text-charcoal-500">
               <Sparkles className="h-4 w-4 text-terracotta-600" />
@@ -35,22 +60,22 @@ export function Footer() {
             </h4>
             <ul className="space-y-2 text-sm">
               <li>
-                <Link href="/calculator" className="text-charcoal-600 hover:text-terracotta-600 transition-colors">
-                  Tile Inventory Calculator
+                <Link href={calculatorHref} className="text-charcoal-600 hover:text-terracotta-600 transition-colors">
+                  {nav.calculator}
                 </Link>
               </li>
               <li>
-                <Link href="/projects" className="text-charcoal-600 hover:text-terracotta-600 transition-colors">
-                  Curated DIY Catalogue
+                <Link href={projectsHref} className="text-charcoal-600 hover:text-terracotta-600 transition-colors">
+                  {nav.projects}
                 </Link>
               </li>
               <li>
-                <Link href="/articles" className="text-charcoal-600 hover:text-terracotta-600 transition-colors">
-                  Editorial Guides & Tips
+                <Link href={articlesHref} className="text-charcoal-600 hover:text-terracotta-600 transition-colors">
+                  {nav.articles}
                 </Link>
               </li>
               <li>
-                <Link href="/projects?category=kitchen-dining" className="text-charcoal-600 hover:text-terracotta-600 transition-colors">
+                <Link href={`${projectsHref}?category=kitchen-dining`} className="text-charcoal-600 hover:text-terracotta-600 transition-colors">
                   Kitchen Trivets & Coasters
                 </Link>
               </li>
@@ -77,24 +102,13 @@ export function Footer() {
           <div className="space-y-3">
             <h4 className="text-xs font-semibold uppercase tracking-wider text-charcoal-900 flex items-center gap-1.5">
               <Globe className="h-3.5 w-3.5 text-charcoal-600" />
-              <span>Language</span>
+              <span>Language & Region</span>
             </h4>
             <p className="text-xs text-charcoal-500">
-              Localized guides, measurements, and cut plans:
+              Select language for localized specifications and plans:
             </p>
-            <div className="flex flex-wrap gap-1.5 pt-1">
-              <span className="inline-flex items-center rounded border border-ceramic-400 bg-white px-2 py-1 text-xs font-medium text-charcoal-900 shadow-xs">
-                English (US / UK)
-              </span>
-              <span className="inline-flex items-center rounded border border-ceramic-300 bg-ceramic-200/60 px-2 py-1 text-xs text-charcoal-600 hover:bg-white hover:text-charcoal-900 cursor-pointer transition-colors">
-                Deutsch
-              </span>
-              <span className="inline-flex items-center rounded border border-ceramic-300 bg-ceramic-200/60 px-2 py-1 text-xs text-charcoal-600 hover:bg-white hover:text-charcoal-900 cursor-pointer transition-colors">
-                Français
-              </span>
-              <span className="inline-flex items-center rounded border border-ceramic-300 bg-ceramic-200/60 px-2 py-1 text-xs text-charcoal-600 hover:bg-white hover:text-charcoal-900 cursor-pointer transition-colors">
-                Español
-              </span>
+            <div className="pt-1">
+              <LanguageSwitcher variant="footer" />
             </div>
           </div>
         </div>
@@ -114,18 +128,17 @@ export function Footer() {
         {/* Bottom Bar */}
         <div className="mt-8 flex flex-col items-center justify-between gap-4 border-t border-ceramic-300 pt-6 sm:flex-row">
           <p className="text-xs text-charcoal-500">
-            &copy; {new Date().getFullYear()} Leftover Tile Project Planner. All rights reserved.
-            Deterministic plans powered by structural calculation.
+            &copy; {new Date().getFullYear()} Leftover Tile Project Planner. {nav.footerRights}
           </p>
           <div className="flex items-center gap-6 text-xs text-charcoal-500">
-            <Link href="/articles/safety-and-materials" className="hover:text-charcoal-800 transition-colors">
+            <Link href={buildLocalizedPath(activeLocale, "/articles/safe-tile-cutting-silica-dust-suppression")} className="hover:text-charcoal-800 transition-colors">
               Safety Guidelines
             </Link>
-            <Link href="/articles/grout-and-adhesive-guide" className="hover:text-charcoal-800 transition-colors">
+            <Link href={buildLocalizedPath(activeLocale, "/articles/adhesive-chemistry-thinset-vs-mastic")} className="hover:text-charcoal-800 transition-colors">
               Adhesive Specs
             </Link>
             <Link href="/admin/login" className="hover:text-charcoal-800 transition-colors">
-              Admin
+              {nav.admin}
             </Link>
           </div>
         </div>

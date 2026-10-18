@@ -9,7 +9,7 @@
 | **Phase 3** | **Admin Auth, 20 Seeded Projects, CRUD & Verification Commerce Guards** | **COMPLETED** | Content catalog & safety gating milestone |
 | **Phase 4** | **Printable PDF Pipeline, Versioned Snapshots, Vector Diagrams & Protected Downloads** | **COMPLETED** | Document generation & asset protection milestone |
 | **Phase 5** | **Stripe Checkout, Webhook Verification, Idempotent Fulfillment & Entitlement Revocation** | **COMPLETED** | Payment lifecycle & commerce security milestone |
-| **Phase 6** | Public Project Detail Previews, 15 Original SEO Articles & Multilingual Routing | Queued | Following Phase 5 |
+| **Phase 6** | **Multilingual Routing (EN/DE/FR/ES), 15 Original SEO Articles, Localization & Dynamic Sitemaps** | **COMPLETED** | Content discovery, editorial authority & global SEO milestone |
 | **Phase 7** | Production Hardening, Audit & Vercel Deployment | Queued | Final release |
 
 ---
@@ -116,48 +116,94 @@
   - `processPurchaseRefund()` immediately marks entitlement `isRevoked: true` and invalidates the download token via `revokeDownloadToken()`.
   - Subsequent download requests with revoked tokens fail with `HTTP 403 Forbidden`.
 
-### Automated Testing Suite
-- [x] Vitest test suite created (`src/lib/stripe/__tests__/stripe-checkout.test.ts`):
-  - Strict rejection of unverified plans from checkout.
-  - Enforcement of fixed 499 cents pricing upon physical verification.
-  - API checkout route parameter validation and HTTP 403 commerce guard rejection.
-  - Webhook missing/invalid signature rejection (HTTP 400).
-  - Cryptographically valid webhook signature processing (HTTP 200).
-  - Idempotent purchase fulfillment and token issuance.
-  - Duplicate webhook delivery idempotency check.
-  - Payment failure handling without token generation.
-  - Charge refund entitlement and download token revocation.
-  - **Total 59/59 unit tests passing** across 4 test suites.
+---
+
+## 6. Phase 6 Deliverables Checklist
+
+### Multilingual Internationalization (i18n) Framework
+- [x] Core i18n configuration (`src/lib/i18n/config.ts`):
+  - Supported locales: English (`en`), German (`de`), French (`fr`), and Spanish (`es`).
+  - Default locale: `en` (clean URL routing without prefix, e.g. `/projects`).
+  - **Editorial Transparency Disclosures (`LOCALE_DISCLOSURES`)**: Clear disclaimer on German, French, and Spanish pages clarifying translation origins and affirming TCNA/ANSI standards, strictly complying with the instruction: *"Do not invent translations or claim native editorial review has happened."*
+- [x] Localized Navigation (`src/lib/i18n/navigation.ts`):
+  - Comprehensive translations for headers, footers, brand taglines, and call-to-actions across all 4 locales.
+- [x] SEO Metadata & Hreflang Engine (`src/lib/i18n/metadata.ts`):
+  - `normalizePath()` and `buildLocalizedPath()` ensuring clean canonical paths.
+  - `buildCanonicalAndHreflang()` generating exact Google SEO-compliant canonical URLs, language alternate links (`en`, `de`, `fr`, `es`), and `x-default` targeting default English paths.
+  - `createLocalizedMetadata()` providing complete OpenGraph and Twitter cards per locale.
+- [x] Interactive UI Components:
+  - Accessible `LanguageSwitcher` (`src/components/layout/LanguageSwitcher.tsx`) in both Header and Footer.
+  - Persistent `EditorialDisclosureBanner` (`src/components/layout/EditorialDisclosureBanner.tsx`) prominently displayed on non-English routes.
+
+### 15 Original Technical SEO English Articles (1,600–1,800 Words Each)
+- [x] Strict word-count compliance verified programmatically ($1,600 \le \text{wordCount} \le 1,800$):
+  1. `art-01`: Safe Tile Cutting at Home: OSHA Silica Dust Suppression (1,797 words)
+  2. `art-02`: Ceramic vs. Porcelain vs. Terracotta: Water Absorption & Porosity (1,743 words)
+  3. `art-03`: Mastering Mosaic Fractures: Trencadís Scoring & Shard Layouts (1,707 words)
+  4. `art-04`: Adhesive Chemistry: Polymer-Modified Thinset vs. Type 1 Mastic (1,630 words)
+  5. `art-05`: Grout Selection & Compressive Strength: Sanded, Unsanded, & Epoxy (1,726 words)
+  6. `art-06`: How to Seal Porous Tile & Grout: Penetrating vs. Topical Chemistry (1,643 words)
+  7. `art-07`: Continuous Rim Diamond Blades: Kerf Allowance & Thermal Dressing (1,639 words)
+  8. `art-08`: Outdoor Tile Projects: Freeze-Thaw Durability & Thermal Expansion (1,691 words)
+  9. `art-09`: Substrate Preparation: Cement Backer Board vs. Exterior Plywood (1,613 words)
+  10. `art-10`: Drilling Precision Holes in Vitrified Porcelain Without Fractures (1,606 words)
+  11. `art-11`: Salvaging & Restoring Vintage Architectural Tiles (1,612 words)
+  12. `art-12`: Heat-Shielding Kitchen Trivets: Mortar Thermal Conductivity (1,707 words)
+  13. `art-13`: Waterproofing Membranes for Planters: Hydrostatic Pressure Control (1,666 words)
+  14. `art-14`: Calculating Tile Waste, Cutting Kerf, and Shard Area Yields (1,614 words)
+  15. `art-15`: Designing Architectural Mosaic Borders: Symmetry & Grout Harmony (1,619 words)
+- [x] Article Management & Query Store (`src/lib/articles/articleStore.ts`):
+  - Bi-directional slug resolution (canonical English and localized German/French/Spanish slugs).
+  - Cross-linking engine retrieving related projects (`SEEDED_PROJECTS`) and related guides.
+
+### Localized Route Tree & Prerendering
+- [x] Multi-locale directory structure (`src/app/[locale]/`):
+  - `src/app/[locale]/layout.tsx`: Parameter validation (`isValidLocale()`) and `EditorialDisclosureBanner`.
+  - `src/app/[locale]/page.tsx`: Localized home page with localized JSON-LD schemas.
+  - `src/app/[locale]/calculator/page.tsx`: Localized tile inventory matching wizard.
+  - `src/app/[locale]/projects/page.tsx`: Localized projects catalogue.
+  - `src/app/[locale]/projects/[slug]/page.tsx`: Localized project detail and plan view with active $4.99 checkout button.
+  - `src/app/[locale]/articles/page.tsx`: Localized guides hub.
+  - `src/app/[locale]/articles/[slug]/page.tsx`: Localized guide reader with table of contents, reading time, and cross-links.
+
+### Dynamic XML Sitemap & Robots Configuration
+- [x] Dynamic Sitemap Generator (`src/app/sitemap.ts`):
+  - 156 total indexed URLs (4 static hubs + 20 project plans + 15 articles across all 4 locales).
+  - Accurate `lastModified`, `changeFrequency`, `priority`, and complete `alternates.languages` dictionaries.
+- [x] Robots Configuration (`src/app/robots.ts`):
+  - Global crawler permissions allowing public editorial and product pages.
+  - Strict disallow directives for `/admin/`, `/api/`, and `/checkout/`.
 
 ---
 
-## 6. Test Execution Log
+## 7. Test Execution Log
 
 | Date / Timestamp | Test / Check | Command Executed | Result | Details |
 | :--- | :--- | :--- | :---: | :--- |
 | Phase 1 | Workspace & Toolchain | `Get-ChildItem`, `node -v` | Pass | Clean directory, Node v24.21.0, Git initialized. |
 | Phase 1 | App Foundation Checks | `npm run typecheck`, `npm run lint` | Pass | 0 errors, 0 warnings. |
 | Phase 1 | Initial Production Build | `npm run build` | Pass | All 9 routes compiled and prerendered. |
-| 2026-10-18 | Vitest Matching Suite | `npm test` (`vitest run`) | Pass | 16/16 unit tests passed in 34ms. |
-| 2026-10-18 | Vitest Admin Suite | `npm test` (`vitest run`) | Pass | 17/17 unit tests passed in 23ms. |
-| 2026-10-18 | Vitest PDF Pipeline Suite | `npm test` (`vitest run`) | Pass | 16/16 unit tests passed in 264ms. |
-| 2026-10-18 | Vitest Stripe Checkout Suite | `npm test` (`vitest run`) | Pass | 10/10 unit tests passed in 50ms. |
-| 2026-10-18 | Full Test Suite (4 Files) | `npm test` (`vitest run`) | Pass | **59/59 unit tests passed** in 962ms. |
+| 2026-10-18 | Vitest Matching Suite | `npm test` (`vitest run`) | Pass | 16/16 unit tests passed. |
+| 2026-10-18 | Vitest Admin Suite | `npm test` (`vitest run`) | Pass | 17/17 unit tests passed. |
+| 2026-10-18 | Vitest PDF Pipeline Suite | `npm test` (`vitest run`) | Pass | 16/16 unit tests passed. |
+| 2026-10-18 | Vitest Stripe Checkout Suite | `npm test` (`vitest run`) | Pass | 10/10 unit tests passed. |
+| 2026-10-18 | Vitest i18n & Articles Suite | `npm test` (`vitest run`) | Pass | 27/27 unit tests passed. |
+| 2026-10-18 | Full Test Suite (5 Files) | `npm test` (`vitest run`) | Pass | **86/86 unit tests passed** in 1.08s. |
 | 2026-10-18 | TypeScript Typecheck | `npm run typecheck` | Pass | `tsc --noEmit` exited with code 0. Zero errors. |
 | 2026-10-18 | ESLint Code Check | `npm run lint` | Pass | `next lint` exited with code 0. Zero warnings, zero errors. |
-| 2026-10-18 | Production Build | `npm run build` | Pass | Compiled successfully in 10.1s. All 14 routes generated cleanly. |
+| 2026-10-18 | Next.js Production Build | `npm run build` | Pass | **172/172 static and dynamic pages generated successfully**. |
 
 ---
 
-## 7. Unresolved Issues & Technical Debts
+## 8. Unresolved Issues & Technical Debts
 
-- None. All Phase 5 deliverables, Stripe checkout sessions, signed webhooks, idempotent fulfillment, customer success/cancel screens, refund revocation policies, and automated unit tests have passed.
+- None. All Phase 6 deliverables (15 SEO articles, i18n routing for EN/DE/FR/ES, hreflang alternates, editorial disclosures, dynamic sitemaps, robots rules, and full automated testing) are fully implemented and verified.
 
 ---
 
-## 8. Next Steps for Phase 6 (Awaiting User Direction)
+## 9. Next Steps for Phase 7 (Awaiting User Direction)
 
-1. Build public project preview and detail pages (`/projects/[slug]`) displaying bills of materials, tool checklists, and sample diagrams.
-2. Embed the one-click $4.99 Stripe checkout button into public project detail pages.
-3. Author the 15 original, comprehensive DIY guides (1,600–1,800 words each) covering tile cutting, mosaic techniques, outdoor weatherproofing, adhesive chemistry, and upcycling ideas.
-4. Establish multilingual routing (`/en`, `/de`, `/fr`, `/es`) with automated hreflang tags, canonical URLs, and localized slugs.
+1. Conduct end-to-end performance and accessibility auditing (Lighthouse / Core Web Vitals).
+2. Configure production Supabase environment variables and RLS policy verification.
+3. Verify Stripe production webhook signing and live key provisioning.
+4. Prepare Vercel deployment configuration, headers, and caching policies.
