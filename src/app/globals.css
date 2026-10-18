@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #FDFBF7;
+  --foreground: #171513;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background-color: var(--background);
+    color: var(--foreground);
+  }
+
+  ::selection {
+    background-color: #F3D5C7;
+    color: #521D0D;
+  }
+
+  /* Accessible focus rings */
+  :focus-visible {
+    outline: 2px solid #C85A32;
+    outline-offset: 2px;
+  }
+}
