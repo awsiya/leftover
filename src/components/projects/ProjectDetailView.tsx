@@ -1,6 +1,5 @@
 import React from "react";
 import Link from "next/link";
-import Image from "next/image";
 import {
   ArrowLeft,
   Clock,
@@ -15,6 +14,7 @@ import { SeededProject } from "@/lib/data/seededProjects";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { ProjectCheckoutButton } from "@/components/checkout/ProjectCheckoutButton";
+import { ProjectImage } from "@/components/ui/ProjectImage";
 import { AppLocale, DEFAULT_LOCALE } from "@/lib/i18n/config";
 import { buildLocalizedPath } from "@/lib/i18n/metadata";
 
@@ -57,9 +57,11 @@ export function ProjectDetailView({ project, locale = DEFAULT_LOCALE }: ProjectD
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-10 items-start">
           {/* Project Featured Image */}
           <div className="lg:col-span-6 relative h-64 sm:h-80 w-full overflow-hidden rounded-editorial border border-ceramic-300 shadow-card bg-ceramic-200">
-            <Image
+            <ProjectImage
               src={project.featuredImageUrl || "/images/placeholder-project.webp"}
               alt={displayTitle}
+              fallbackTitle={displayTitle}
+              categoryLabel={project.categoryLabel}
               fill
               priority
               sizes="(max-width: 1024px) 100vw, 50vw"

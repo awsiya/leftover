@@ -1,7 +1,6 @@
 import React from "react";
 import type { Metadata } from "next";
 import Link from "next/link";
-import Image from "next/image";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ArrowRight, Clock, Layers, ShieldCheck } from "lucide-react";
 import { AppLocale, isValidLocale } from "@/lib/i18n/config";
@@ -11,6 +10,7 @@ import { SAMPLE_PROJECTS } from "@/lib/data/sampleProjects";
 import { SEEDED_PROJECTS } from "@/lib/data/seededProjects";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/Card";
 import { Badge } from "@/components/ui/Badge";
+import { ProjectImage } from "@/components/ui/ProjectImage";
 
 interface ProjectsPageProps {
   params: Promise<{
@@ -127,10 +127,12 @@ export default async function LocalizedProjectsCataloguePage({ params }: Project
             return (
               <Card key={project.id} hoverEffect className="flex flex-col h-full bg-white">
                 {/* Image banner */}
-                <div className="relative h-48 sm:h-52 w-full overflow-hidden rounded-editorial -mt-2 -mx-2 mb-4">
-                  <Image
+                <div className="relative h-48 sm:h-52 w-full overflow-hidden rounded-editorial -mt-2 -mx-2 mb-4 bg-ceramic-200">
+                  <ProjectImage
                     src={project.imageUrl}
                     alt={displayTitle}
+                    fallbackTitle={displayTitle}
+                    categoryLabel={project.categoryLabel}
                     fill
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     className="object-cover transition-transform duration-300 hover:scale-105"

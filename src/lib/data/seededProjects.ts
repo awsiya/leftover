@@ -89,7 +89,7 @@ export const TWENTY_PROJECT_CONCEPTS: SeededProject[] = [
     verificationNotes: "CONCEPT - Prototype dimensions calculated. Physical heat-tolerance test with boiling kettle pending in workshop.",
     verifiedAt: null,
     verifiedBy: null,
-    featuredImageUrl: "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&w=800&q=80",
+    featuredImageUrl: "https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=800&q=80",
     requirements: {
       minAreaSqMm: 41209,
       targetAreaSqMm: 45000,
@@ -498,7 +498,7 @@ export const TWENTY_PROJECT_CONCEPTS: SeededProject[] = [
     verificationNotes: "CONCEPT - Hardwood rim deflection formula drafted. Physical load testing with 5kg weight pending in workshop.",
     verifiedAt: null,
     verifiedBy: null,
-    featuredImageUrl: "https://images.unsplash.com/photo-1540518614846-7ede433c4550?auto=format&fit=crop&w=800&q=80",
+    featuredImageUrl: "https://images.unsplash.com/photo-1584589167171-541ce45f1eea?auto=format&fit=crop&w=800&q=80",
     requirements: {
       minAreaSqMm: 123871,
       targetAreaSqMm: 135000,

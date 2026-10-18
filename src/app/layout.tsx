@@ -3,6 +3,7 @@ import { Inter, Newsreader } from "next/font/google";
 import "./globals.css";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { MobileStickyBar } from "@/components/layout/MobileStickyBar";
 
 const sansFont = Inter({
   subsets: ["latin"],
@@ -59,8 +60,9 @@ export default function RootLayout({
     <html lang="en" className={`${sansFont.variable} ${serifFont.variable}`}>
       <body className="min-h-screen bg-ceramic-50 font-sans text-charcoal-900 antialiased flex flex-col selection:bg-terracotta-200 selection:text-terracotta-900">
         <Header />
-        <main className="flex-1">{children}</main>
+        <main className="flex-1 pb-16 sm:pb-0">{children}</main>
         <Footer />
+        <MobileStickyBar />
       </body>
     </html>
   );

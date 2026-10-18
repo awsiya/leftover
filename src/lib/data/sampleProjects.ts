@@ -20,7 +20,7 @@ export const SAMPLE_PROJECTS: ProjectPlanSummary[] = [
     dimensionsSummary: "8\" × 8\" (20cm × 20cm)",
     shortDescription:
       "Transform 2–4 cracked or surplus kitchen tiles into an artisanal, heat-shielding table trivet with cork underlayment.",
-    imageUrl: "https://images.unsplash.com/photo-1579783902614-a3fb3927b675?auto=format&fit=crop&w=800&q=80",
+    imageUrl: "https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&w=800&q=80",
     tools: [
       { name: "Tile nippers or score cutter" },
       { name: "Rubber grout float" },
@@ -54,7 +54,7 @@ export const SAMPLE_PROJECTS: ProjectPlanSummary[] = [
     dimensionsSummary: "10\" × 10\" × 16\" (25cm × 25cm × 40cm)",
     shortDescription:
       "An architectural indoor plant riser utilizing 8–12 subway or rectangular wall tiles arranged in an interlocking herringbone pattern.",
-    imageUrl: "https://images.unsplash.com/photo-1485955900006-10f4d324d411?auto=format&fit=crop&w=800&q=80",
+    imageUrl: "https://images.unsplash.com/photo-1513519245088-0e12902e5a38?auto=format&fit=crop&w=800&q=80",
     tools: [
       { name: "Diamond wheel tile cutter" },
       { name: "3/16\" notched trowel" },
@@ -120,7 +120,7 @@ export const SAMPLE_PROJECTS: ProjectPlanSummary[] = [
     dimensionsSummary: "4\" × 4\" each (10cm × 10cm)",
     shortDescription:
       "Convert four 4-inch square sample or leftover bathroom tiles into a refined set of tabletop drink coasters.",
-    imageUrl: "https://images.unsplash.com/photo-1616486338812-3dadae4b4ace?auto=format&fit=crop&w=800&q=80",
+    imageUrl: "https://images.unsplash.com/photo-1563245372-f21724e3856d?auto=format&fit=crop&w=800&q=80",
     tools: [
       { name: "Diamond hand sanding pad (200 grit)" },
       { name: "Utility knife" },
@@ -150,7 +150,7 @@ export const SAMPLE_PROJECTS: ProjectPlanSummary[] = [
     dimensionsSummary: "12\" × 16\" (30cm × 40cm)",
     shortDescription:
       "A sturdy breakfast-in-bed serving tray featuring an easy-clean tiled surface resilient against hot teapots and condensation.",
-    imageUrl: "https://images.unsplash.com/photo-1540518614846-7ede433c4550?auto=format&fit=crop&w=800&q=80",
+    imageUrl: "https://images.unsplash.com/photo-1584589167171-541ce45f1eea?auto=format&fit=crop&w=800&q=80",
     tools: [
       { name: "Manual snap cutter" },
       { name: "Grout sponge" },
@@ -182,7 +182,7 @@ export const SAMPLE_PROJECTS: ProjectPlanSummary[] = [
     dimensionsSummary: "18\" × 24\" (45cm × 60cm)",
     shortDescription:
       "Elevate a plain beveled mirror with a 3-inch mosaic frame crafted from broken patterned decorative tiles.",
-    imageUrl: "https://images.unsplash.com/photo-1513694203232-719a280e022f?auto=format&fit=crop&w=800&q=80",
+    imageUrl: "https://images.unsplash.com/photo-1507652313519-d4e9174996dd?auto=format&fit=crop&w=800&q=80",
     tools: [
       { name: "Compound tile nipper" },
       { name: "Tweezers for fine shard placement" },
