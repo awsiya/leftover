@@ -8,8 +8,8 @@
 | **Phase 2** | **Deterministic Matching Engine & Schema Design** | **COMPLETED** | Core algorithmic engine milestone |
 | **Phase 3** | **Admin Auth, 20 Seeded Projects, CRUD & Verification Commerce Guards** | **COMPLETED** | Content catalog & safety gating milestone |
 | **Phase 4** | **Printable PDF Pipeline, Versioned Snapshots, Vector Diagrams & Protected Downloads** | **COMPLETED** | Document generation & asset protection milestone |
-| **Phase 5** | Public Project Detail Previews & Stripe Payment Lifecycle ($4.99) | Queued | Following Phase 4 |
-| **Phase 6** | 15 Original SEO Articles & Multilingual Routing | Queued | Following Phase 5 |
+| **Phase 5** | **Stripe Checkout, Webhook Verification, Idempotent Fulfillment & Entitlement Revocation** | **COMPLETED** | Payment lifecycle & commerce security milestone |
+| **Phase 6** | Public Project Detail Previews, 15 Original SEO Articles & Multilingual Routing | Queued | Following Phase 5 |
 | **Phase 7** | Production Hardening, Audit & Vercel Deployment | Queued | Final release |
 
 ---
@@ -17,9 +17,7 @@
 ## 2. Phase 2 Deliverables Checklist
 
 ### Supabase Database & Migrations
-- [x] Schema migration created (`supabase/migrations/20261018000001_phase2_schema_and_requirements.sql`):
-  - `categories`, `projects`, `project_requirements`, `project_plan_versions`, `project_translations`, `tools`, `materials`, `articles`.
-  - Row Level Security (RLS) policies on all tables restricting unverified plans and unauthenticated writes.
+- [x] Schema migration created (`supabase/migrations/20261018000001_phase2_schema_and_requirements.sql`).
 - [x] TypeScript database definitions updated (`src/lib/types/database.ts`).
 - [x] Database documentation updated (`docs/DATABASE_DESIGN.md`).
 
@@ -63,55 +61,77 @@
 ## 4. Phase 4 Deliverables Checklist
 
 ### Immutable Plan Versioning & Snapshot Registry
-- [x] Versioned snapshot data types (`src/lib/types/planVersion.ts`):
-  - `PlanVersionSnapshot`, `PlanMeasurementSpecs`, `PlanCuttingGuidance`, `PlanMaterialItem`, `PlanToolItem`, `PlanInstructionStep`, `PlanDiagramSpec`, `DownloadToken`.
+- [x] Versioned snapshot data types (`src/lib/types/planVersion.ts`).
 - [x] Version snapshot engine & frozen registry (`src/lib/pdf/versionStore.ts`):
-  - Converts project records into immutable versioned snapshots (`v1.0.0`).
   - Cryptographic SHA-256 checksum generation guaranteeing tamper detection.
-  - Preserves exact frozen snapshot for all 20 seeded projects so customer purchases match the version sold.
-  - `getFrozenPlanVersion()` and `getAllFrozenPlanVersions()`.
+  - Frozen `v1.0.0` snapshots for all 20 projects.
 
 ### Vector Architectural Diagram Rendering
 - [x] Dedicated vector diagram engine (`src/lib/pdf/diagramRenderer.ts`):
-  - `drawCuttingLayoutDiagram`: Vector blueprint illustrating substrate frame, tile grid, cut boundaries, 2.4mm saw kerf deduction, perimeter grout clearance, and dimensional callout arrows.
-  - `drawCrossSectionDiagram`: Structural layered cross-section illustrating substrate base, 3mm combed thinset mortar bed, tile layer, and sanded grout joint with technical callout annotations.
+  - `drawCuttingLayoutDiagram`: Top-down cutting blueprint with saw kerf and dimension callouts.
+  - `drawCrossSectionDiagram`: Structural cross-section with substrate, mortar bed, tile, and grout joint callouts.
 
 ### Publication-Quality Printable PDF Generator
 - [x] High-resolution printable PDF generator (`src/lib/pdf/generator.ts`):
-  - Pure TypeScript implementation using `pdf-lib` (zero native binaries, < 200ms generation).
-  - Multi-page US Letter / A4 architectural formatting (3 pages).
-  - **Page 1**: Header brand banner, plan version chip, category/difficulty badges, verified measurements table (target dimensions, required tile area in metric/imperial, piece count yield, thickness range, grout spacing, kerf allowance), FIG 1.0 Cutting Blueprint, and FIG 2.0 Structural Cross-Section.
-  - **Page 2**: Running header, Bill of Materials checklist with checkboxes and exact quantities, Tools Required checklist, in-depth cutting protocol (wet saw, score-and-snap, tile nipper techniques), and technical advisory for diamond hand pad edge honing.
-  - **Page 3**: Numbered step-by-step fabrication instructions with step badges, inline safety tips, TCNA / OSHA safety protocol box (crystalline silica respirator rules, ANSI Z87.1 eye protection, ANSI Level 5 cut gloves, adhesive ventilation), and official anti-tamper certification seal with SHA-256 hash.
+  - 3-page US Letter / A4 architectural formatting using `pdf-lib`.
+  - Measurements table, materials & tools checklists, numbered steps, TCNA/OSHA safety protocols, anti-tamper seal.
 
 ### Protected Download Security & API Pipeline
-- [x] Token management pipeline (`src/lib/pdf/downloadProtection.ts`):
-  - `createPlanDownloadToken()`: Cryptographically random UUID tokens with configurable expiration and download attempt caps.
-  - Enforces physical verification commerce gate: Unverified projects cannot have download tokens issued unless under explicit admin preview authorization.
-  - `validateDownloadToken()`: Rejects non-existent, expired, revoked, or rate-limited tokens.
-  - `recordTokenAccess()` and `revokeDownloadToken()`.
-- [x] Protected download API endpoint (`src/app/api/plans/[token]/download/route.ts`):
-  - Streams binary PDF with security headers: `Content-Type: application/pdf`, `Cache-Control: private, no-store, max-age=0, must-revalidate`, `X-Robots-Tag: noindex, nofollow`, `X-Plan-Version`, `X-Plan-Checksum`.
-- [x] Admin preview integration (`src/lib/actions/planDownloadActions.ts`):
-  - `generateAdminPlanDownloadUrl()` server action allowing administrators to preview and verify generated plans directly.
-- [x] Admin UI Integration (`src/components/admin/ProjectEditorForm.tsx`):
-  - Added "Printable PDF Plan (v1.0.0)" tab with live vector PDF generation, preview/download link, and SHA-256 verification display.
-
-### Automated Testing Suite
-- [x] Vitest test suite created (`src/lib/pdf/__tests__/pdf-generation.test.ts`):
-  - Plan versioning and deterministic SHA-256 checksums.
-  - Parameter mutation detection through checksum mismatch.
-  - Binary PDF generation and magic header (`%PDF-1.`) verification.
-  - Page count (3 pages) and US Letter dimensional conformance.
-  - Metadata embedding and customer licensing watermark.
-  - Cutting and layout diagram rendering for both mosaic and straight-cut projects.
-  - Protected download token creation, validation, expiration, revocation, and max download limits.
-  - Download API route handler validation and security headers verification.
-  - **Total 49/49 unit tests passing** across all test suites.
+- [x] Token management pipeline (`src/lib/pdf/downloadProtection.ts`).
+- [x] Protected download API endpoint (`src/app/api/plans/[token]/download/route.ts`).
+- [x] Admin preview integration (`src/lib/actions/planDownloadActions.ts`).
+- [x] Admin UI Integration (`src/components/admin/ProjectEditorForm.tsx`).
 
 ---
 
-## 5. Test Execution Log
+## 5. Phase 5 Deliverables Checklist
+
+### Stripe Client & Server-Side Checkout Sessions
+- [x] Official Stripe SDK integration (`src/lib/stripe/client.ts`):
+  - Server-only singleton blocking browser runtime usage.
+  - Test mode support with fallback configuration.
+- [x] Server-side checkout session creation (`src/lib/stripe/checkout.ts`, `src/app/api/checkout/route.ts`):
+  - **Fixed Pricing Invariant**: Prices strictly determined server-side from database / live project store (499 cents / $4.99 USD). Client-supplied prices are strictly ignored.
+  - **Physical Verification Commerce Guard**: `assertProjectCanBeSold()` strictly prevents creating checkout sessions for unverified (`draft`/`reviewing`) plans, throwing a security exception.
+
+### Cryptographic Webhook Verification & Idempotent Fulfillment
+- [x] Webhook route handler (`src/app/api/webhooks/stripe/route.ts`):
+  - Cryptographic signature check via `stripe.webhooks.constructEvent()` against raw request body and `STRIPE_WEBHOOK_SECRET`.
+  - Rejects unsigned or forged payloads with `HTTP 400 Bad Request`.
+  - Handles `checkout.session.completed`, `payment_intent.payment_failed`, `charge.refunded`, and `charge.dispute.created`.
+- [x] Idempotent order & entitlement registry (`src/lib/stripe/orderStore.ts`):
+  - `fulfillPurchaseOrder()`: Issues 30-day download token and entitlement on `checkout.session.completed`.
+  - Safe duplicate delivery handling: Re-delivery of identical webhook events returns `alreadyProcessed: true` and preserves original tokens without duplication.
+  - `markPurchaseFailed()`: Records failed payment attempts without issuing download tokens.
+
+### Customer Checkout Success, Cancellation & Revocation Policy
+- [x] Customer checkout success page (`src/app/checkout/success/page.tsx`):
+  - **Zero Trust in Browser Redirects**: Queries server-side order store by `session_id`; never serves plans based on URL parameters alone.
+  - Awaiting confirmation state: Guides customers while background webhooks complete.
+  - Confirmed state: Displays verified badge, project details, order ID, and authorized download button.
+  - Handles refunded orders by notifying user that entitlement was revoked.
+- [x] Customer checkout cancellation page (`src/app/checkout/cancel/page.tsx`):
+  - Informs customer that no charge was made, providing return paths to project details, calculator, or catalog.
+- [x] Refund & chargeback dispute revocation policy:
+  - `processPurchaseRefund()` immediately marks entitlement `isRevoked: true` and invalidates the download token via `revokeDownloadToken()`.
+  - Subsequent download requests with revoked tokens fail with `HTTP 403 Forbidden`.
+
+### Automated Testing Suite
+- [x] Vitest test suite created (`src/lib/stripe/__tests__/stripe-checkout.test.ts`):
+  - Strict rejection of unverified plans from checkout.
+  - Enforcement of fixed 499 cents pricing upon physical verification.
+  - API checkout route parameter validation and HTTP 403 commerce guard rejection.
+  - Webhook missing/invalid signature rejection (HTTP 400).
+  - Cryptographically valid webhook signature processing (HTTP 200).
+  - Idempotent purchase fulfillment and token issuance.
+  - Duplicate webhook delivery idempotency check.
+  - Payment failure handling without token generation.
+  - Charge refund entitlement and download token revocation.
+  - **Total 59/59 unit tests passing** across 4 test suites.
+
+---
+
+## 6. Test Execution Log
 
 | Date / Timestamp | Test / Check | Command Executed | Result | Details |
 | :--- | :--- | :--- | :---: | :--- |
@@ -120,24 +140,24 @@
 | Phase 1 | Initial Production Build | `npm run build` | Pass | All 9 routes compiled and prerendered. |
 | 2026-10-18 | Vitest Matching Suite | `npm test` (`vitest run`) | Pass | 16/16 unit tests passed in 34ms. |
 | 2026-10-18 | Vitest Admin Suite | `npm test` (`vitest run`) | Pass | 17/17 unit tests passed in 23ms. |
-| 2026-10-18 | Vitest PDF Pipeline Suite | `npm test` (`vitest run`) | Pass | **16/16 PDF tests passed** in 264ms. |
-| 2026-10-18 | Full Test Suite (3 Files) | `npm test` (`vitest run`) | Pass | **49/49 unit tests passed** in 932ms. |
+| 2026-10-18 | Vitest PDF Pipeline Suite | `npm test` (`vitest run`) | Pass | 16/16 unit tests passed in 264ms. |
+| 2026-10-18 | Vitest Stripe Checkout Suite | `npm test` (`vitest run`) | Pass | 10/10 unit tests passed in 50ms. |
+| 2026-10-18 | Full Test Suite (4 Files) | `npm test` (`vitest run`) | Pass | **59/59 unit tests passed** in 962ms. |
 | 2026-10-18 | TypeScript Typecheck | `npm run typecheck` | Pass | `tsc --noEmit` exited with code 0. Zero errors. |
 | 2026-10-18 | ESLint Code Check | `npm run lint` | Pass | `next lint` exited with code 0. Zero warnings, zero errors. |
-| 2026-10-18 | Production Build | `npm run build` | Pass | Compiled successfully in 9.8s. All 10 routes generated cleanly. |
+| 2026-10-18 | Production Build | `npm run build` | Pass | Compiled successfully in 10.1s. All 14 routes generated cleanly. |
 
 ---
 
-## 6. Unresolved Issues & Technical Debts
+## 7. Unresolved Issues & Technical Debts
 
-- None. All Phase 4 deliverables, PDF generator, vector diagrams, versioned snapshots, download protection token route, and unit tests have passed.
+- None. All Phase 5 deliverables, Stripe checkout sessions, signed webhooks, idempotent fulfillment, customer success/cancel screens, refund revocation policies, and automated unit tests have passed.
 
 ---
 
-## 7. Next Steps for Phase 5 (Awaiting User Direction)
+## 8. Next Steps for Phase 6 (Awaiting User Direction)
 
 1. Build public project preview and detail pages (`/projects/[slug]`) displaying bills of materials, tool checklists, and sample diagrams.
-2. Integrate Stripe Checkout for one-time $4.99 payments (499 cents).
-3. Implement the server-side Stripe webhook verification endpoint (`/api/webhooks/stripe`) with cryptographic signature check and idempotent purchase storage.
-4. Wire the commerce safety guard (`assertProjectCanBeSold`) to the Stripe checkout session creation route to prevent unverified projects from ever entering checkout.
-5. Link completed Stripe purchases to the PDF download token generator to issue secure download access links upon verified payment.
+2. Embed the one-click $4.99 Stripe checkout button into public project detail pages.
+3. Author the 15 original, comprehensive DIY guides (1,600–1,800 words each) covering tile cutting, mosaic techniques, outdoor weatherproofing, adhesive chemistry, and upcycling ideas.
+4. Establish multilingual routing (`/en`, `/de`, `/fr`, `/es`) with automated hreflang tags, canonical URLs, and localized slugs.

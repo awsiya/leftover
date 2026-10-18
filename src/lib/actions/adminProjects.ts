@@ -45,10 +45,18 @@ export async function getAdminProjects(filters?: {
 }
 
 /**
- * Gets a single project by ID or slug.
+ * Gets a single project by ID or slug for admin.
  */
 export async function getAdminProjectById(idOrSlug: string): Promise<SeededProject | null> {
   await requireAdmin();
+  const project = projectsStore.find((p) => p.id === idOrSlug || p.slug === idOrSlug);
+  return project || null;
+}
+
+/**
+ * Public helper to retrieve a project by ID or slug from live store.
+ */
+export async function getLiveProjectById(idOrSlug: string): Promise<SeededProject | null> {
   const project = projectsStore.find((p) => p.id === idOrSlug || p.slug === idOrSlug);
   return project || null;
 }

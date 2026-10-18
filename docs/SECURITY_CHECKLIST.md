@@ -34,6 +34,12 @@
 - [x] **Price Tampering Prevention**:
   - Project plans are fixed at 499 cents ($4.99 USD).
   - Price is looked up server-side from the verified database record, never accepted from user-submitted form parameters.
+- [x] **Refund & Dispute Download Revocation**:
+  - Webhooks handling `charge.refunded` or `charge.dispute.created` immediately mark entitlements as revoked (`isRevoked: true`).
+  - Download tokens are instantly invalidated via `revokeDownloadToken()`; subsequent download requests are rejected with `HTTP 403 Forbidden`.
+- [x] **Zero Trust in Browser Redirects**:
+  - The checkout success redirect (`/checkout/success?session_id=...`) is never treated as proof of payment.
+  - Download entitlements are unlocked only after cryptographic Stripe webhook event confirmation.
 
 ---
 
