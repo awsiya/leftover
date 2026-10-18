@@ -69,3 +69,24 @@ Working with ceramic, porcelain, and stone tiles presents physical hazards (sili
 - [x] **Eye & Hand Protection**: Clear warnings to wear ANSI Z87.1 safety glasses and heavy-duty cut-resistant gloves when scoring, snapping, or nipping tiles.
 - [x] **Substrate & Load Safety**: Clear weight and deflection guidelines so users do not build heavy tile tables on unstable furniture frames.
 - [x] **No Unsupported AI Claims**: All structural specifications are derived from standard tile industry guidelines (TCNA / ANSI standards).
+
+---
+
+## 7. Project Physical Verification & Commerce Gating
+
+- [x] **Strict Physical Verification Gate**:
+  - In accordance with TCNA duty-of-care, projects cannot be marked `verified` without verifiable physical prototype test build evidence.
+  - Requires all 4 physical inspection checklist items:
+    1. 1:1 prototype dimensions physically measured and verified.
+    2. Cutting safety and edge smoothness verified (no razor edges or dangerous splinters).
+    3. Structural load capacity and substrate deflection verified.
+    4. Adhesive bonding and grout cure verified.
+  - Must include test build date, verifier name/credentials, and notes $\ge 20$ characters.
+- [x] **Commerce Safety Guard (`assertProjectCanBeSold`)**:
+  - Programmatic guard strictly preventing checkout or purchase generation for projects in `draft`, `reviewing`, or `archived` status.
+  - Throws `COMMERCE SECURITY VIOLATION` error if unverified plan purchase is attempted.
+- [x] **Database Constraints**:
+  - `chk_projects_verified_evidence` ensures PostgreSQL rejects any update setting `verification_status = 'verified'` if `verified_at` or `verified_by` are NULL.
+- [x] **Admin Role & Server-Side Authorization**:
+  - `/admin` routes and server actions (`getAdminProjects`, `updateProjectVerification`, `saveAdminProject`, `deleteAdminProject`) enforce server-side authentication (`verifyAdminSession` / `requireAdmin`).
+  - Unauthorized callers receive immediate HTTP 307 redirect to `/admin/login` or exception rejection.

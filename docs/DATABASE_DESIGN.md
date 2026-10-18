@@ -295,4 +295,34 @@ CREATE POLICY "Public can view published article translations"
         WHERE articles.id = article_translations.article_id
         AND articles.is_published = TRUE
     ));
+
+-- 3. Phase 3: Physical Verification Constraint & Admin Management RLS
+ALTER TABLE public.projects ADD CONSTRAINT chk_projects_verified_evidence
+    CHECK (
+        verification_status != 'verified' OR (
+            verified_at IS NOT NULL AND
+            verified_by IS NOT NULL
+        )
+    );
+
+CREATE POLICY "Admins have full access to projects"
+    ON public.projects FOR ALL
+    USING (
+        (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin' OR
+        (auth.jwt() -> 'user_metadata' ->> 'role') = 'admin'
+    );
+
+CREATE POLICY "Admins have full access to project requirements"
+    ON public.project_requirements FOR ALL
+    USING (
+        (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin' OR
+        (auth.jwt() -> 'user_metadata' ->> 'role') = 'admin'
+    );
+
+CREATE POLICY "Admins have full access to project translations"
+    ON public.project_translations FOR ALL
+    USING (
+        (auth.jwt() -> 'app_metadata' ->> 'role') = 'admin' OR
+        (auth.jwt() -> 'user_metadata' ->> 'role') = 'admin'
+    );
 ```
