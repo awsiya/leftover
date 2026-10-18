@@ -52,6 +52,7 @@ ALTER TABLE public.download_tokens ENABLE ROW LEVEL SECURITY;
 
 -- 4. Purchases RLS Policies
 -- Service Role has unrestricted CRUD for server-side webhook processing
+DROP POLICY IF EXISTS "Service role full access on purchases" ON public.purchases;
 CREATE POLICY "Service role full access on purchases"
     ON public.purchases
     FOR ALL
@@ -59,6 +60,7 @@ CREATE POLICY "Service role full access on purchases"
     WITH CHECK (auth.role() = 'service_role');
 
 -- Admins with verified app_metadata role have full read/write
+DROP POLICY IF EXISTS "Admins full access on purchases" ON public.purchases;
 CREATE POLICY "Admins full access on purchases"
     ON public.purchases
     FOR ALL
@@ -72,6 +74,7 @@ CREATE POLICY "Admins full access on purchases"
     );
 
 -- Customers can only read their own purchase history
+DROP POLICY IF EXISTS "Customers view own purchases" ON public.purchases;
 CREATE POLICY "Customers view own purchases"
     ON public.purchases
     FOR SELECT
@@ -81,6 +84,7 @@ CREATE POLICY "Customers view own purchases"
 
 -- 5. Download Tokens RLS Policies
 -- Service Role has unrestricted CRUD for token issuance & validation
+DROP POLICY IF EXISTS "Service role full access on download_tokens" ON public.download_tokens;
 CREATE POLICY "Service role full access on download_tokens"
     ON public.download_tokens
     FOR ALL
@@ -88,6 +92,7 @@ CREATE POLICY "Service role full access on download_tokens"
     WITH CHECK (auth.role() = 'service_role');
 
 -- Admins can view and manage tokens
+DROP POLICY IF EXISTS "Admins full access on download_tokens" ON public.download_tokens;
 CREATE POLICY "Admins full access on download_tokens"
     ON public.download_tokens
     FOR ALL
@@ -103,6 +108,7 @@ CREATE POLICY "Admins full access on download_tokens"
 -- Direct client read/write on download_tokens is blocked by default
 
 -- 6. Admin CRUD Policies for Articles and Article Translations (Addressing Phase 3 Defect)
+DROP POLICY IF EXISTS "Admins full access on articles" ON public.articles;
 CREATE POLICY "Admins full access on articles"
     ON public.articles
     FOR ALL
@@ -117,6 +123,7 @@ CREATE POLICY "Admins full access on articles"
         auth.role() = 'service_role'
     );
 
+DROP POLICY IF EXISTS "Admins full access on article_translations" ON public.article_translations;
 CREATE POLICY "Admins full access on article_translations"
     ON public.article_translations
     FOR ALL

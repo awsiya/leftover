@@ -71,6 +71,38 @@ export default async function CheckoutSuccessPage({ searchParams }: SuccessPageP
           planVersion: session.metadata?.planVersion,
         });
         purchase = fulfillment.purchase;
+
+        if (!fulfillment.alreadyProcessed) {
+          const { syncPurchaseToDatabase } = await import("@/lib/db/postgres");
+          const { sendOrderConfirmationEmail } = await import("@/lib/email/mailer");
+          await syncPurchaseToDatabase({
+            purchaseId: fulfillment.purchase.id,
+            projectId: fulfillment.purchase.projectId,
+            projectSlug: fulfillment.purchase.projectSlug,
+            planVersion: fulfillment.purchase.planVersion,
+            customerEmail: fulfillment.purchase.customerEmail,
+            amountCents: fulfillment.purchase.amountCents,
+            currency: fulfillment.purchase.currency,
+            stripeSessionId: fulfillment.purchase.stripeSessionId,
+            stripePaymentIntentId: fulfillment.purchase.stripePaymentIntentId,
+            status: fulfillment.purchase.status,
+            downloadToken: fulfillment.entitlement?.downloadToken,
+          });
+
+          if (fulfillment.purchase.customerEmail && fulfillment.entitlement) {
+            const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://4dev.in";
+            await sendOrderConfirmationEmail({
+              customerEmail: fulfillment.purchase.customerEmail,
+              customerName: session.customer_details?.name || undefined,
+              projectTitle: fulfillment.purchase.projectSlug,
+              projectSlug: fulfillment.purchase.projectSlug,
+              planVersion: fulfillment.purchase.planVersion,
+              orderId: fulfillment.purchase.id,
+              amountCents: fulfillment.purchase.amountCents,
+              downloadUrl: `${baseUrl}/api/plans/${fulfillment.entitlement.downloadToken}/download`,
+            });
+          }
+        }
       }
     } catch {
       // Continue to pending screen if Stripe lookup is not available

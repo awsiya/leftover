@@ -176,7 +176,35 @@
 
 ---
 
-## 7. Test Execution Log
+## 7. Email Integration & Direct Supabase PostgreSQL Setup
+
+### Resend Transactional Email Service
+- [x] Configured Resend API Key (environment variable `RESEND_API_KEY`).
+- [x] Configured verified sender domain: `Leftover Tile Planner <leftover@4dev.in>`.
+- [x] Transactional Mailer Service (`src/lib/email/mailer.ts`):
+  - Responsive, editorial HTML order confirmation template with terracotta/ceramic palette.
+  - Plain-text fallback for maximum client compatibility.
+  - In-process idempotency guard to prevent duplicate email dispatch for identical order sessions.
+  - Integrated into Stripe webhook fulfillment (`src/app/api/webhooks/stripe/route.ts`) and direct checkout success fallback (`src/app/checkout/success/page.tsx`).
+  - Admin notification email dispatch to `admin@4dev.in`.
+- [x] Live email verification executed: Email ID `01a15020-6728-7707-ab98-dc121f3fb026` delivered successfully via Resend API.
+
+### Live Supabase PostgreSQL Table Management
+- [x] Direct connection configured via `.env.local` poolers:
+  - `DATABASE_URL` (Port 6543, transaction-mode pooler with PgBouncer)
+  - `DIRECT_URL` (Port 5432, session-mode pooler for DDL & migrations)
+- [x] Automated Idempotent Migration Runner (`scripts/migrate.js` & `npm run db:migrate`).
+- [x] Executed all 4 migrations on remote Supabase PostgreSQL (`aws-0-ap-northeast-1.pooler.supabase.com`):
+  1. `20261018000001_phase2_schema_and_requirements.sql` (Enums, core tables, RLS)
+  2. `20261018000002_phase3_admin_and_seeds.sql` (Verification constraints, admin policies, category seeds)
+  3. `20261018000003_seed_20_projects.sql` (20 curated project concepts seeded across 5 categories)
+  4. `20261018000004_purchases_tokens_and_security.sql` (Purchases, download tokens, RLS hardening)
+- [x] Verified 13 public tables, Row Level Security, and physical verification constraints on live database.
+- [x] Database query & synchronization module (`src/lib/db/postgres.ts`) persisting verified purchases and download tokens.
+
+---
+
+## 8. Test Execution Log
 
 | Date / Timestamp | Test / Check | Command Executed | Result | Details |
 | :--- | :--- | :--- | :---: | :--- |
@@ -189,25 +217,28 @@
 | 2026-10-18 | Vitest Stripe Checkout Suite | `npm test` (`vitest run`) | Pass | 10/10 unit tests passed. |
 | 2026-10-18 | Vitest i18n & Articles Suite | `npm test` (`vitest run`) | Pass | 27/27 unit tests passed. |
 | 2026-10-18 | Vitest Security Red-Team Suite | `npm test` (`vitest run`) | Pass | 11/11 unit tests passed. |
-| 2026-10-18 | Full Test Suite (6 Files) | `npm test` (`vitest run`) | Pass | **97/97 unit tests passed** in 1.02s. |
+| 2026-10-18 | Vitest Resend Mailer Suite | `npm test` (`vitest run`) | Pass | 5/5 unit tests passed. |
+| 2026-10-18 | Full Test Suite (7 Files) | `npm test` (`vitest run`) | Pass | **102/102 unit tests passed** in 1.20s. |
 | 2026-10-18 | TypeScript Typecheck | `npm run typecheck` | Pass | `tsc --noEmit` exited with code 0. Zero errors. |
 | 2026-10-18 | ESLint Code Check | `npm run lint` | Pass | `next lint` exited with code 0. Zero warnings, zero errors. |
 | 2026-10-18 | Next.js Production Build | `npm run build` | Pass | **172/172 static and dynamic pages generated successfully**. |
+| 2026-10-18 | Remote Database Migrations | `npm run db:migrate` | Pass | All 4 migrations applied, 13 public tables verified. |
+| 2026-10-18 | Live Resend API Verification | `node scripts/test_send_email.js` | Pass | Email delivered with ID `01a15020-6728-7707-ab98-dc121f3fb026`. |
 
 ---
 
-## 8. Unresolved Issues & External Service Readiness
+## 9. Unresolved Issues & External Service Readiness
 
 - **External Service Production Deployment Verification**:
-  - **Stripe**: Live webhook signing secret (`STRIPE_WEBHOOK_SECRET`) and live secret key (`STRIPE_SECRET_KEY`) must be provisioned in the production environment before processing real payments. The codebase is fully verified in Stripe test mode.
-  - **Supabase**: Production database URL and service-role key must be supplied in host environment variables, and migration `20261018000004_purchases_tokens_and_security.sql` must be applied to the remote PostgreSQL instance before live traffic.
-- **Red-Team Confirmed Defects**: All 6 identified vulnerabilities (RT-01 through RT-06: admin redirect loop, metadata privilege escalation, cold-start fallback project, cold-start success pending, missing database tables, and unbounded imperial dimensions) have been remediated, verified with tests, and documented.
+  - **Resend**: Production API key and domain (`leftover@4dev.in`) are active and verified.
+  - **Supabase**: Remote PostgreSQL connection strings (`DATABASE_URL`, `DIRECT_URL`) are active and all 13 tables are migrated and verified on AWS Tokyo (`aws-0-ap-northeast-1`).
+  - **Stripe**: Live webhook signing secret (`STRIPE_WEBHOOK_SECRET`) and live secret key (`STRIPE_SECRET_KEY`) can be switched from test keys whenever production payments are desired.
+- **Red-Team Confirmed Defects**: All 6 identified vulnerabilities (RT-01 through RT-06) remain fully resolved and covered by automated regression tests.
 
 ---
 
-## 9. Next Steps for Phase 7 (Awaiting User Direction)
+## 10. Next Steps for Phase 7 (Awaiting User Direction)
 
 1. Conduct end-to-end performance and accessibility auditing (Lighthouse / Core Web Vitals).
-2. Configure production Supabase environment variables and execute migrations on live instance.
-3. Configure Stripe production webhook signing (`whsec_...`) and live keys.
-4. Prepare Vercel deployment configuration, security headers, and edge caching policies.
+2. Configure Stripe production webhook signing (`whsec_...`) and live keys when ready.
+3. Prepare Vercel deployment configuration, security headers, and edge caching policies.

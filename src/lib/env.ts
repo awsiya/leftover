@@ -37,6 +37,23 @@ const serverEnvSchema = z.object({
   STRIPE_WEBHOOK_SECRET: z
     .string()
     .optional(),
+  DATABASE_URL: z
+    .string()
+    .optional(),
+  DIRECT_URL: z
+    .string()
+    .optional(),
+  RESEND_API_KEY: z
+    .string()
+    .optional(),
+  RESEND_FROM_EMAIL: z
+    .string()
+    .default("Leftover Tile Planner <leftover@4dev.in>"),
+  ADMIN_EMAIL: z
+    .string()
+    .email()
+    .optional()
+    .default("admin@4dev.in"),
 });
 
 /**
@@ -74,7 +91,7 @@ function parsePublicEnv() {
   return result.success ? result.data : publicEnvSchema.parse({});
 }
 
-function parseServerEnv() {
+function parseServerEnv(): Partial<z.infer<typeof serverEnvSchema>> {
   // Only evaluate on server-side
   if (typeof window !== "undefined") {
     return {};
@@ -84,6 +101,11 @@ function parseServerEnv() {
     SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
     STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY,
     STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET,
+    DATABASE_URL: process.env.DATABASE_URL,
+    DIRECT_URL: process.env.DIRECT_URL,
+    RESEND_API_KEY: process.env.RESEND_API_KEY,
+    RESEND_FROM_EMAIL: process.env.RESEND_FROM_EMAIL,
+    ADMIN_EMAIL: process.env.ADMIN_EMAIL,
   });
 
   if (!result.success) {
@@ -102,7 +124,9 @@ export const env = {
 /**
  * Helper to ensure server-side caller only uses server secrets when configured.
  */
-export function requireServerSecret(key: "SUPABASE_SERVICE_ROLE_KEY" | "STRIPE_SECRET_KEY" | "STRIPE_WEBHOOK_SECRET"): string {
+export function requireServerSecret(
+  key: "SUPABASE_SERVICE_ROLE_KEY" | "STRIPE_SECRET_KEY" | "STRIPE_WEBHOOK_SECRET" | "DATABASE_URL" | "DIRECT_URL" | "RESEND_API_KEY"
+): string {
   if (typeof window !== "undefined") {
     throw new Error(`CRITICAL SECURITY VIOLATION: Attempted to access server secret "${key}" in browser client.`);
   }

@@ -25,54 +25,63 @@ ALTER TABLE public.projects
     );
 
 -- 2. Admin RLS Policies (Full CRUD for Admin Role)
+DROP POLICY IF EXISTS "Admins full access on categories" ON public.categories;
 CREATE POLICY "Admins full access on categories"
     ON public.categories
     FOR ALL
     USING (auth.jwt() ->> 'role' = 'admin' OR auth.role() = 'service_role')
     WITH CHECK (auth.jwt() ->> 'role' = 'admin' OR auth.role() = 'service_role');
 
+DROP POLICY IF EXISTS "Admins full access on projects" ON public.projects;
 CREATE POLICY "Admins full access on projects"
     ON public.projects
     FOR ALL
     USING (auth.jwt() ->> 'role' = 'admin' OR auth.role() = 'service_role')
     WITH CHECK (auth.jwt() ->> 'role' = 'admin' OR auth.role() = 'service_role');
 
+DROP POLICY IF EXISTS "Admins full access on project_requirements" ON public.project_requirements;
 CREATE POLICY "Admins full access on project_requirements"
     ON public.project_requirements
     FOR ALL
     USING (auth.jwt() ->> 'role' = 'admin' OR auth.role() = 'service_role')
     WITH CHECK (auth.jwt() ->> 'role' = 'admin' OR auth.role() = 'service_role');
 
+DROP POLICY IF EXISTS "Admins full access on project_plan_versions" ON public.project_plan_versions;
 CREATE POLICY "Admins full access on project_plan_versions"
     ON public.project_plan_versions
     FOR ALL
     USING (auth.jwt() ->> 'role' = 'admin' OR auth.role() = 'service_role')
     WITH CHECK (auth.jwt() ->> 'role' = 'admin' OR auth.role() = 'service_role');
 
+DROP POLICY IF EXISTS "Admins full access on project_translations" ON public.project_translations;
 CREATE POLICY "Admins full access on project_translations"
     ON public.project_translations
     FOR ALL
     USING (auth.jwt() ->> 'role' = 'admin' OR auth.role() = 'service_role')
     WITH CHECK (auth.jwt() ->> 'role' = 'admin' OR auth.role() = 'service_role');
 
+DROP POLICY IF EXISTS "Admins full access on tools" ON public.tools;
 CREATE POLICY "Admins full access on tools"
     ON public.tools
     FOR ALL
     USING (auth.jwt() ->> 'role' = 'admin' OR auth.role() = 'service_role')
     WITH CHECK (auth.jwt() ->> 'role' = 'admin' OR auth.role() = 'service_role');
 
+DROP POLICY IF EXISTS "Admins full access on project_tools" ON public.project_tools;
 CREATE POLICY "Admins full access on project_tools"
     ON public.project_tools
     FOR ALL
     USING (auth.jwt() ->> 'role' = 'admin' OR auth.role() = 'service_role')
     WITH CHECK (auth.jwt() ->> 'role' = 'admin' OR auth.role() = 'service_role');
 
+DROP POLICY IF EXISTS "Admins full access on materials" ON public.materials;
 CREATE POLICY "Admins full access on materials"
     ON public.materials
     FOR ALL
     USING (auth.jwt() ->> 'role' = 'admin' OR auth.role() = 'service_role')
     WITH CHECK (auth.jwt() ->> 'role' = 'admin' OR auth.role() = 'service_role');
 
+DROP POLICY IF EXISTS "Admins full access on project_materials" ON public.project_materials;
 CREATE POLICY "Admins full access on project_materials"
     ON public.project_materials
     FOR ALL

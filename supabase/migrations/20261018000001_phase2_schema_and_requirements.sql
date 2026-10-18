@@ -5,12 +5,24 @@
 --         Project Plan Versions, Tools, Materials, Articles, and RLS.
 -- ============================================================================
 
--- 1. Create Enumerations
-CREATE TYPE public.project_difficulty AS ENUM ('beginner', 'intermediate', 'advanced');
-CREATE TYPE public.verification_status AS ENUM ('draft', 'reviewing', 'verified', 'archived');
-CREATE TYPE public.tile_condition_type AS ENUM ('intact', 'mixed', 'broken_mosaic');
-CREATE TYPE public.tile_material_enum AS ENUM ('ceramic', 'porcelain', 'terracotta', 'marble_natural_stone', 'glass');
-CREATE TYPE public.payment_status_enum AS ENUM ('pending', 'completed', 'refunded', 'disputed');
+-- 1. Create Enumerations (Idempotent)
+DO $$ BEGIN
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'project_difficulty') THEN
+        CREATE TYPE public.project_difficulty AS ENUM ('beginner', 'intermediate', 'advanced');
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'verification_status') THEN
+        CREATE TYPE public.verification_status AS ENUM ('draft', 'reviewing', 'verified', 'archived');
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'tile_condition_type') THEN
+        CREATE TYPE public.tile_condition_type AS ENUM ('intact', 'mixed', 'broken_mosaic');
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'tile_material_enum') THEN
+        CREATE TYPE public.tile_material_enum AS ENUM ('ceramic', 'porcelain', 'terracotta', 'marble_natural_stone', 'glass');
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_type WHERE typname = 'payment_status_enum') THEN
+        CREATE TYPE public.payment_status_enum AS ENUM ('pending', 'completed', 'refunded', 'disputed');
+    END IF;
+END $$;
 
 -- 2. Categories Table
 CREATE TABLE IF NOT EXISTS public.categories (
@@ -192,10 +204,12 @@ ALTER TABLE public.articles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.article_translations ENABLE ROW LEVEL SECURITY;
 
 -- 10. Public RLS Read Policies (Verified Content Only)
+DROP POLICY IF EXISTS "Public read verified projects" ON public.projects;
 CREATE POLICY "Public read verified projects"
     ON public.projects FOR SELECT
     USING (verification_status = 'verified');
 
+DROP POLICY IF EXISTS "Public read requirements for verified projects" ON public.project_requirements;
 CREATE POLICY "Public read requirements for verified projects"
     ON public.project_requirements FOR SELECT
     USING (EXISTS (
@@ -204,6 +218,7 @@ CREATE POLICY "Public read requirements for verified projects"
         AND projects.verification_status = 'verified'
     ));
 
+DROP POLICY IF EXISTS "Public read active plan version metadata" ON public.project_plan_versions;
 CREATE POLICY "Public read active plan version metadata"
     ON public.project_plan_versions FOR SELECT
     USING (is_active = TRUE AND EXISTS (
@@ -212,6 +227,7 @@ CREATE POLICY "Public read active plan version metadata"
         AND projects.verification_status = 'verified'
     ));
 
+DROP POLICY IF EXISTS "Public read verified project translations" ON public.project_translations;
 CREATE POLICY "Public read verified project translations"
     ON public.project_translations FOR SELECT
     USING (EXISTS (
@@ -220,10 +236,12 @@ CREATE POLICY "Public read verified project translations"
         AND projects.verification_status = 'verified'
     ));
 
+DROP POLICY IF EXISTS "Public read published articles" ON public.articles;
 CREATE POLICY "Public read published articles"
     ON public.articles FOR SELECT
     USING (is_published = TRUE);
 
+DROP POLICY IF EXISTS "Public read published article translations" ON public.article_translations;
 CREATE POLICY "Public read published article translations"
     ON public.article_translations FOR SELECT
     USING (EXISTS (

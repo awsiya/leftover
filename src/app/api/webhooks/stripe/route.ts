@@ -6,6 +6,9 @@ import {
   markPurchaseFailed,
   processPurchaseRefund,
 } from "@/lib/stripe/orderStore";
+import { sendOrderConfirmationEmail, sendAdminOrderNotification } from "@/lib/email/mailer";
+import { syncPurchaseToDatabase } from "@/lib/db/postgres";
+import { TWENTY_PROJECT_CONCEPTS } from "@/lib/data/seededProjects";
 
 export async function POST(request: NextRequest): Promise<Response> {
   const signature = request.headers.get("stripe-signature");
@@ -65,6 +68,60 @@ export async function POST(request: NextRequest): Promise<Response> {
             console.log(
               `[Stripe Webhook] Order successfully fulfilled for session: ${session.id}`
             );
+
+            // Persist order & download token to live Supabase PostgreSQL
+            await syncPurchaseToDatabase({
+              purchaseId: fulfillment.purchase.id,
+              projectId: fulfillment.purchase.projectId,
+              projectSlug: fulfillment.purchase.projectSlug,
+              planVersion: fulfillment.purchase.planVersion,
+              customerEmail: fulfillment.purchase.customerEmail,
+              amountCents: fulfillment.purchase.amountCents,
+              currency: fulfillment.purchase.currency,
+              stripeSessionId: fulfillment.purchase.stripeSessionId,
+              stripePaymentIntentId: fulfillment.purchase.stripePaymentIntentId,
+              status: fulfillment.purchase.status,
+              downloadToken: fulfillment.entitlement?.downloadToken,
+            });
+
+            // Dispatch customer confirmation email via Resend
+            const matchedProject = TWENTY_PROJECT_CONCEPTS.find(
+              (p) =>
+                p.id === fulfillment.purchase.projectId ||
+                p.slug === fulfillment.purchase.projectSlug
+            );
+            const projectTitle = matchedProject
+              ? matchedProject.translations.en.title
+              : fulfillment.purchase.projectSlug;
+
+            const baseUrl =
+              process.env.NEXT_PUBLIC_APP_URL || "https://4dev.in";
+            const downloadUrl = fulfillment.entitlement
+              ? `${baseUrl}/api/plans/${fulfillment.entitlement.downloadToken}/download`
+              : `${baseUrl}/checkout/success?session_id=${session.id}`;
+
+            if (fulfillment.purchase.customerEmail) {
+              await sendOrderConfirmationEmail({
+                customerEmail: fulfillment.purchase.customerEmail,
+                customerName: session.customer_details?.name || undefined,
+                projectTitle,
+                projectSlug: fulfillment.purchase.projectSlug,
+                planVersion: fulfillment.purchase.planVersion,
+                orderId: fulfillment.purchase.id,
+                amountCents: fulfillment.purchase.amountCents,
+                downloadUrl,
+                difficulty: matchedProject?.difficulty,
+              });
+            }
+
+            // Dispatch admin notification
+            await sendAdminOrderNotification({
+              orderId: fulfillment.purchase.id,
+              customerEmail: fulfillment.purchase.customerEmail,
+              projectTitle,
+              amountCents: fulfillment.purchase.amountCents,
+              stripeSessionId: session.id,
+            });
           }
         }
         break;
