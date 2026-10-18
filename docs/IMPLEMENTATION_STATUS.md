@@ -188,22 +188,26 @@
 | 2026-10-18 | Vitest PDF Pipeline Suite | `npm test` (`vitest run`) | Pass | 16/16 unit tests passed. |
 | 2026-10-18 | Vitest Stripe Checkout Suite | `npm test` (`vitest run`) | Pass | 10/10 unit tests passed. |
 | 2026-10-18 | Vitest i18n & Articles Suite | `npm test` (`vitest run`) | Pass | 27/27 unit tests passed. |
-| 2026-10-18 | Full Test Suite (5 Files) | `npm test` (`vitest run`) | Pass | **86/86 unit tests passed** in 1.08s. |
+| 2026-10-18 | Vitest Security Red-Team Suite | `npm test` (`vitest run`) | Pass | 11/11 unit tests passed. |
+| 2026-10-18 | Full Test Suite (6 Files) | `npm test` (`vitest run`) | Pass | **97/97 unit tests passed** in 1.02s. |
 | 2026-10-18 | TypeScript Typecheck | `npm run typecheck` | Pass | `tsc --noEmit` exited with code 0. Zero errors. |
 | 2026-10-18 | ESLint Code Check | `npm run lint` | Pass | `next lint` exited with code 0. Zero warnings, zero errors. |
 | 2026-10-18 | Next.js Production Build | `npm run build` | Pass | **172/172 static and dynamic pages generated successfully**. |
 
 ---
 
-## 8. Unresolved Issues & Technical Debts
+## 8. Unresolved Issues & External Service Readiness
 
-- None. All Phase 6 deliverables (15 SEO articles, i18n routing for EN/DE/FR/ES, hreflang alternates, editorial disclosures, dynamic sitemaps, robots rules, and full automated testing) are fully implemented and verified.
+- **External Service Production Deployment Verification**:
+  - **Stripe**: Live webhook signing secret (`STRIPE_WEBHOOK_SECRET`) and live secret key (`STRIPE_SECRET_KEY`) must be provisioned in the production environment before processing real payments. The codebase is fully verified in Stripe test mode.
+  - **Supabase**: Production database URL and service-role key must be supplied in host environment variables, and migration `20261018000004_purchases_tokens_and_security.sql` must be applied to the remote PostgreSQL instance before live traffic.
+- **Red-Team Confirmed Defects**: All 6 identified vulnerabilities (RT-01 through RT-06: admin redirect loop, metadata privilege escalation, cold-start fallback project, cold-start success pending, missing database tables, and unbounded imperial dimensions) have been remediated, verified with tests, and documented.
 
 ---
 
 ## 9. Next Steps for Phase 7 (Awaiting User Direction)
 
 1. Conduct end-to-end performance and accessibility auditing (Lighthouse / Core Web Vitals).
-2. Configure production Supabase environment variables and RLS policy verification.
-3. Verify Stripe production webhook signing and live key provisioning.
-4. Prepare Vercel deployment configuration, headers, and caching policies.
+2. Configure production Supabase environment variables and execute migrations on live instance.
+3. Configure Stripe production webhook signing (`whsec_...`) and live keys.
+4. Prepare Vercel deployment configuration, security headers, and edge caching policies.

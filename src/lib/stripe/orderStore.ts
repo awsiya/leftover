@@ -85,6 +85,9 @@ export function fulfillPurchaseOrder(params: {
   stripeSessionId: string;
   stripePaymentIntentId?: string | null;
   customerEmail?: string | null;
+  projectId?: string;
+  projectSlug?: string;
+  planVersion?: string;
 }): {
   alreadyProcessed: boolean;
   purchase: PurchaseOrder;
@@ -93,14 +96,14 @@ export function fulfillPurchaseOrder(params: {
   let purchase = purchasesStore.get(params.stripeSessionId);
 
   if (!purchase) {
-    // If not found in memory (e.g. server restart), create and record completed purchase
+    // If not found in memory (e.g. server restart), create and record completed purchase using metadata
     const now = new Date().toISOString();
     const id = crypto.randomUUID();
     purchase = {
       id,
-      projectId: "proj-001",
-      projectSlug: "mediterranean-mosaic-trivet",
-      planVersion: "v1.0.0",
+      projectId: params.projectId || "proj-001",
+      projectSlug: params.projectSlug || "mediterranean-mosaic-trivet",
+      planVersion: params.planVersion || "v1.0.0",
       customerEmail: params.customerEmail || "customer@example.com",
       amountCents: 499,
       currency: "usd",
@@ -112,6 +115,13 @@ export function fulfillPurchaseOrder(params: {
     };
     purchasesStore.set(id, purchase);
     purchasesStore.set(params.stripeSessionId, purchase);
+  } else {
+    if (params.projectId && (purchase.projectId === "unknown" || !purchase.projectId)) {
+      purchase.projectId = params.projectId;
+    }
+    if (params.projectSlug && (purchase.projectSlug === "unknown" || !purchase.projectSlug)) {
+      purchase.projectSlug = params.projectSlug;
+    }
   }
 
   // Idempotency Check: if already completed, do NOT issue duplicate tokens

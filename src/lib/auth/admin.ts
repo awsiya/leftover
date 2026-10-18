@@ -22,18 +22,19 @@ export async function verifyAdminSession(): Promise<AdminAuthResult> {
     };
   }
 
-  // Check for test or local dev bypass in test/dev environments when Supabase is not yet seeded
-  if (
-    process.env.NODE_ENV === "test" ||
-    (process.env.NODE_ENV === "development" &&
-      process.env.NEXT_PUBLIC_SUPABASE_URL?.includes("placeholder"))
-  ) {
-    // In test or local dev without live Supabase cloud instance, allow mock admin session
-    return {
-      isAdmin: true,
-      userId: "dev-admin-id",
-      email: "admin@leftovertileplanner.com",
-    };
+  // Check for test or local dev mock in non-production environments when Supabase is not configured
+  if (process.env.NODE_ENV !== "production") {
+    if (
+      process.env.NODE_ENV === "test" ||
+      (process.env.NODE_ENV === "development" &&
+        process.env.NEXT_PUBLIC_SUPABASE_URL?.includes("placeholder"))
+    ) {
+      return {
+        isAdmin: true,
+        userId: "dev-admin-id",
+        email: "admin@leftovertileplanner.com",
+      };
+    }
   }
 
   try {
@@ -52,16 +53,18 @@ export async function verifyAdminSession(): Promise<AdminAuthResult> {
       };
     }
 
-    // Role verification: check app_metadata or user_metadata for 'admin'
-    const role =
-      (user.app_metadata && user.app_metadata.role) ||
-      (user.user_metadata && user.user_metadata.role);
-
+    // Strict Role verification: check app_metadata ONLY for 'admin'
+    // CRITICAL SECURITY FIX: user_metadata is user-writable via client SDK and MUST NOT be trusted.
+    const role = user.app_metadata && user.app_metadata.role;
     const isExplicitAdmin = role === "admin";
-    const isAdminEmail =
-      user.email &&
-      (user.email.endsWith("@leftovertileplanner.com") ||
-        user.email === process.env.ADMIN_EMAIL);
+
+    // Strict admin email verification against explicit server environment variable
+    const configuredAdminEmail = process.env.ADMIN_EMAIL?.trim().toLowerCase();
+    const isAdminEmail = Boolean(
+      configuredAdminEmail &&
+        user.email &&
+        user.email.trim().toLowerCase() === configuredAdminEmail
+    );
 
     if (!isExplicitAdmin && !isAdminEmail) {
       return {

@@ -46,7 +46,36 @@ export default async function CheckoutSuccessPage({ searchParams }: SuccessPageP
   }
 
   // Server-side verification check: DO NOT TRUST BROWSER REDIRECT AS PROOF
-  const purchase = getPurchaseBySessionId(session_id);
+  let purchase = getPurchaseBySessionId(session_id);
+
+  // If purchase is not in memory or pending, verify directly with Stripe API (handles cold starts & serverless lambdas)
+  if (
+    (!purchase || purchase.status === "pending") &&
+    process.env.STRIPE_SECRET_KEY &&
+    !process.env.STRIPE_SECRET_KEY.includes("placeholder")
+  ) {
+    try {
+      const { getStripeClient } = await import("@/lib/stripe/client");
+      const { fulfillPurchaseOrder } = await import("@/lib/stripe/orderStore");
+      const stripe = getStripeClient();
+      const session = await stripe.checkout.sessions.retrieve(session_id);
+
+      if (session.payment_status === "paid" || session.status === "complete") {
+        const fulfillment = fulfillPurchaseOrder({
+          stripeSessionId: session.id,
+          stripePaymentIntentId:
+            typeof session.payment_intent === "string" ? session.payment_intent : null,
+          customerEmail: session.customer_details?.email || session.customer_email || null,
+          projectId: session.metadata?.projectId,
+          projectSlug: session.metadata?.projectSlug,
+          planVersion: session.metadata?.planVersion,
+        });
+        purchase = fulfillment.purchase;
+      }
+    } catch {
+      // Continue to pending screen if Stripe lookup is not available
+    }
+  }
 
   // Case 1: Webhook hasn't processed or session is unknown
   if (!purchase || purchase.status === "pending") {

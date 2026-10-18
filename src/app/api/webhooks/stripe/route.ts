@@ -52,6 +52,9 @@ export async function POST(request: NextRequest): Promise<Response> {
             stripePaymentIntentId:
               typeof session.payment_intent === "string" ? session.payment_intent : null,
             customerEmail: session.customer_details?.email || session.customer_email || null,
+            projectId: session.metadata?.projectId,
+            projectSlug: session.metadata?.projectSlug,
+            planVersion: session.metadata?.planVersion,
           });
 
           if (fulfillment.alreadyProcessed) {
